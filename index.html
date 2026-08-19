@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>POFlow — GST-native Purchase Orders, Vendors &amp; Invoice Approval</title>
+<meta name="description" content="Raise purchase orders, onboard vendors, and approve invoices with CGST/SGST/IGST worked out for you. Built by chartered accountants for Indian businesses." />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --bg:#f0f1ec; --card:#ffffff; --border:#e0e2da; --border-strong:#c9ccc0;
+    --ink:#16202e; --ink-soft:#5a6472; --primary:#0f6f5c; --primary-dark:#0c5a4a;
+    --primary-soft:#e4f0ec; --amber:#b8893a; --blue:#3b5b9b; --red:#b23b3b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.55;font-feature-settings:'tnum' 1;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
+  .serif{font-family:'Fraunces',serif;}
+  a{color:var(--primary);text-decoration:none;}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:40;background:rgba(240,241,236,0.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;}
+  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:22px;letter-spacing:-0.02em;color:var(--ink);}
+  .logo span{color:var(--primary);}
+  .nav-links{display:flex;align-items:center;gap:28px;font-size:14px;}
+  .nav-links a{color:var(--ink-soft);font-weight:500;}
+  .nav-links a:hover{color:var(--ink);}
+  .btn{display:inline-block;font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;transition:all .15s;border:1px solid var(--ink);color:var(--ink);background:transparent;}
+  .btn:hover{background:var(--ink);color:#fff;}
+  .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
+
+  /* hero */
+  .hero{padding:80px 0 60px;}
+  .hero-grid{display:grid;grid-template-columns:1.05fr 0.95fr;gap:56px;align-items:center;}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--primary);margin-bottom:20px;}
+  .hero h1{font-family:'Fraunces',serif;font-size:52px;line-height:1.05;letter-spacing:-0.025em;font-weight:600;margin-bottom:22px;}
+  .hero h1 em{font-style:italic;color:var(--primary);}
+  .hero p.lead{font-size:18px;color:var(--ink-soft);margin-bottom:32px;max-width:520px;}
+  .hero-cta{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+  .hero-note{font-size:13px;color:var(--ink-soft);margin-top:18px;}
+
+  /* hero visual — a stylized "ledger" document card */
+  .doc-card{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 30px 60px -30px rgba(22,32,46,0.3);padding:24px;transform:rotate(-1.2deg);}
+  .doc-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:14px;}
+  .doc-head .t{font-family:'Fraunces',serif;font-weight:600;font-size:16px;}
+  .doc-head .n{font-size:11px;color:var(--ink-soft);text-align:right;}
+  .doc-row{display:grid;grid-template-columns:1.6fr 0.6fr 0.8fr 0.9fr;gap:8px;font-size:11.5px;padding:7px 0;border-bottom:1px solid var(--border);}
+  .doc-row.h{color:var(--ink-soft);font-weight:600;text-transform:uppercase;font-size:9.5px;letter-spacing:0.04em;}
+  .doc-row .r{text-align:right;font-variant-numeric:tabular-nums;}
+  .doc-tot{display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;font-weight:700;font-family:'Fraunces',serif;font-size:15px;}
+  .doc-badge{display:inline-block;background:var(--primary-soft);color:var(--primary);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:3px 9px;border-radius:5px;margin-top:12px;}
+  .gst-split{display:flex;gap:8px;font-size:10.5px;color:var(--ink-soft);margin-top:8px;}
+  .gst-split span{background:#f4f5f0;padding:3px 8px;border-radius:5px;}
+
+  /* trust bar */
+  .trust{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#fff;padding:22px 0;}
+  .trust .wrap{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap;text-align:center;}
+  .trust .item{font-size:13px;color:var(--ink-soft);}
+  .trust .item strong{color:var(--ink);font-weight:600;}
+
+  /* sections */
+  section{padding:76px 0;}
+  .sec-head{text-align:center;max-width:640px;margin:0 auto 52px;}
+  .sec-head h2{font-family:'Fraunces',serif;font-size:36px;line-height:1.12;letter-spacing:-0.02em;font-weight:600;margin-bottom:14px;}
+  .sec-head p{font-size:16px;color:var(--ink-soft);}
+
+  /* how it works — numbered steps */
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;counter-reset:step;}
+  .step{position:relative;padding-top:8px;}
+  .step .num{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--primary);border:1.5px solid var(--primary);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+  .step h3{font-size:16px;font-weight:600;margin-bottom:7px;}
+  .step p{font-size:14px;color:var(--ink-soft);}
+
+  /* feature cards */
+  .features{background:#fff;}
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+  .feat{border:1px solid var(--border);border-radius:14px;padding:26px;transition:border-color .15s,transform .15s;}
+  .feat:hover{border-color:var(--primary);transform:translateY(-2px);}
+  .feat .ic{width:40px;height:40px;border-radius:10px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;margin-bottom:16px;color:var(--primary);font-family:'Fraunces',serif;font-weight:700;font-size:18px;}
+  .feat h3{font-size:17px;font-weight:600;margin-bottom:8px;}
+  .feat p{font-size:14px;color:var(--ink-soft);}
+
+  /* differentiator band */
+  .band{background:var(--ink);color:#fff;}
+  .band .wrap{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+  .band h2{font-family:'Fraunces',serif;font-size:34px;line-height:1.15;letter-spacing:-0.02em;font-weight:600;margin-bottom:18px;}
+  .band h2 em{font-style:italic;color:#5cc9a7;}
+  .band p{font-size:16px;color:#aeb8c4;margin-bottom:14px;}
+  .band ul{list-style:none;margin-top:22px;}
+  .band li{font-size:15px;padding:9px 0 9px 28px;position:relative;color:#e3e8ee;border-top:1px solid rgba(255,255,255,0.08);}
+  .band li:before{content:'✓';position:absolute;left:0;color:#5cc9a7;font-weight:700;}
+
+  /* CTA */
+  .cta-final{text-align:center;}
+  .cta-final h2{font-family:'Fraunces',serif;font-size:38px;letter-spacing:-0.02em;font-weight:600;margin-bottom:16px;}
+  .cta-final p{font-size:17px;color:var(--ink-soft);margin-bottom:28px;}
+
+  footer{border-top:1px solid var(--border);padding:40px 0;background:#fff;}
+  footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+  footer .logo{font-size:18px;}
+  footer .fnote{font-size:13px;color:var(--ink-soft);}
+  footer .flinks{display:flex;gap:22px;font-size:14px;}
+  footer .flinks a{color:var(--ink-soft);}
+
+  @media(max-width:900px){
+    .hero-grid,.band .wrap{grid-template-columns:1fr;gap:40px;}
+    .steps{grid-template-columns:1fr 1fr;}
+    .feat-grid{grid-template-columns:1fr;}
+    .hero h1{font-size:40px;}
+    .nav-links a:not(.btn){display:none;}
+  }
+  @media(max-width:520px){
+    .steps{grid-template-columns:1fr;}
+    .hero h1{font-size:33px;}
+    section{padding:56px 0;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="logo">PO<span>Flow</span></div>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="#" class="btn btn-primary">Start free trial</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">Purchase Orders · Vendors · Invoice Approval</div>
+      <h1>Procurement that <em>speaks GST.</em></h1>
+      <p class="lead">Raise purchase orders, onboard your vendors, and approve their invoices — with CGST, SGST and IGST worked out automatically. Built by chartered accountants, for Indian businesses.</p>
+      <div class="hero-cta">
+        <a href="#" class="btn btn-primary">Start 14-day free trial</a>
+        <a href="pricing.html" class="btn">See pricing</a>
+      </div>
+      <p class="hero-note">No card required to trial · GST-compliant documents · Your data isolated per company</p>
+    </div>
+    <div>
+      <div class="doc-card">
+        <div class="doc-head">
+          <div class="t">Purchase Order</div>
+          <div class="n">PO-250918<br>18 Sep 2026</div>
+        </div>
+        <div class="doc-row h"><span>Item</span><span class="r">Qty</span><span class="r">Rate</span><span class="r">Amount</span></div>
+        <div class="doc-row"><span>Corrugated boxes (HSN 4819)</span><span class="r">500</span><span class="r">₹42</span><span class="r">₹21,000</span></div>
+        <div class="doc-row"><span>Packing tape (HSN 3919)</span><span class="r">120</span><span class="r">₹65</span><span class="r">₹7,800</span></div>
+        <div class="gst-split"><span>CGST 9% · ₹2,592</span><span>SGST 9% · ₹2,592</span></div>
+        <div class="doc-tot"><span>Total</span><span>₹33,984</span></div>
+        <div class="doc-badge">✓ Invoice matched to PO</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="trust">
+  <div class="wrap">
+    <div class="item"><strong>CGST / SGST / IGST</strong> auto-split</div>
+    <div class="item"><strong>HSN &amp; SAC</strong> GST-rate lookup</div>
+    <div class="item"><strong>Multi-level</strong> approvals</div>
+    <div class="item"><strong>Invoice–PO</strong> matching</div>
+    <div class="item"><strong>Vendor KYC</strong> &amp; documents</div>
+  </div>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>From purchase order to paid — in one place</h2>
+      <p>A simple, controlled flow that keeps your team and your vendors on the same page.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Raise the PO</h3>
+        <p>Add items with HSN/SAC codes; GST rate and the CGST/SGST or IGST split fill in automatically. Download a professional PDF or email it to the vendor.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Vendor uploads invoice</h3>
+        <p>Your vendor signs in to their own portal, sees the PO, and uploads their invoice against it — no chasing over email.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Auto-match &amp; approve</h3>
+        <p>The invoice is checked against the PO — matched, partially matched, or unmatched, with clear reasons — then routed through your approval levels.</p>
+      </div>
+      <div class="step">
+        <div class="num">4</div>
+        <h3>Track to paid</h3>
+        <p>Approve, record payment with a reference, and keep a full audit trail. Export to CSV for your books whenever you need.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Everything a growing business needs to control spend</h2>
+      <p>Purpose-built for Indian SMEs — not a generic global tool with GST bolted on.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat">
+        <div class="ic">₹</div>
+        <h3>GST worked out for you</h3>
+        <p>Type an HSN or SAC code and the GST rate fills in. Same-state orders split into CGST + SGST; inter-state become IGST — automatically, on every document.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">⇄</div>
+        <h3>Invoice–PO matching</h3>
+        <p>Every vendor invoice is compared to its PO and flagged matched, partial, or unmatched — with the exact reason, so nothing gets approved by mistake.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">✓</div>
+        <h3>Approvals that fit your team</h3>
+        <p>Set one or several approval levels. Route POs and invoices to the right people, with a complete, timestamped audit trail.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">◷</div>
+        <h3>Vendor self-service portal</h3>
+        <p>Vendors onboard themselves with a company code, complete their profile, and upload KYC documents — cheque, GST and incorporation certificates.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">▤</div>
+        <h3>Professional PO documents</h3>
+        <p>Your letterhead, GSTIN, terms and conditions, amount in words, and a full annexure — download as PDF or email straight to the vendor.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">◈</div>
+        <h3>Your data, isolated</h3>
+        <p>Every company's data is separated at the database level — one company can never see another's vendors, orders, or invoices. Not just the screen — the data.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div>
+      <h2>Built by chartered accountants who <em>do this every day.</em></h2>
+      <p>POFlow comes from Garg Shekhar &amp; Company — a practising CA firm. We didn't guess at how GST, HSN codes, and invoice compliance work. We deal with them for clients daily.</p>
+      <p>That's why the tax is right, the documents hold up, and the audit trail is real.</p>
+    </div>
+    <div>
+      <ul>
+        <li>GST logic that reflects real compliance, not a generic template</li>
+        <li>Documents structured the way tax and audit expect</li>
+        <li>Invoice matching designed around input-tax-credit reality</li>
+        <li>A firm you can actually talk to — not an overseas support queue</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="cta-final">
+  <div class="wrap">
+    <h2>Put your purchase orders on rails.</h2>
+    <p>Start free for 14 days. Bring your vendors on, raise your first GST-ready PO today.</p>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+      <a href="#" class="btn btn-primary">Start free trial</a>
+      <a href="pricing.html" class="btn">Compare plans</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <div class="logo">PO<span>Flow</span></div>
+      <div class="fnote">A procurement product by Garg Shekhar &amp; Company, Chartered Accountants · Meerut &amp; Noida</div>
+    </div>
+    <div class="flinks">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="pricing.html">Pricing</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>POFlow Pricing — GST-native Purchase Order & Vendor Management</title>
+<style>
+  :root{
+    --ink:#152238;         /* deep slate navy */
+    --ink-soft:#4a5878;
+    --paper:#fbfaf7;       /* warm off-white */
+    --line:#e4e0d6;
+    --accent:#0f6f5c;      /* deep teal-green (invoice/ledger green, not startup neon) */
+    --accent-soft:#e6f2ee;
+    --gold:#b8893a;        /* muted brass, for the recommended tier */
+    --danger:#b23b3b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Georgia','Times New Roman',serif;background:var(--paper);color:var(--ink);line-height:1.5;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
+  .sans{font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}
+
+  header.top{border-bottom:1px solid var(--line);padding:20px 0;}
+  header.top .wrap{display:flex;justify-content:space-between;align-items:baseline;}
+  .brand{font-size:22px;font-weight:700;letter-spacing:-0.02em;}
+  .brand span{color:var(--accent);}
+  .by{font-family:-apple-system,'Segoe UI',sans-serif;font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.08em;}
+
+  .hero{padding:64px 0 40px;text-align:center;}
+  .hero .eyebrow{font-family:-apple-system,'Segoe UI',sans-serif;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:18px;}
+  .hero h1{font-size:44px;line-height:1.1;letter-spacing:-0.02em;max-width:760px;margin:0 auto 18px;}
+  .hero p{font-size:18px;color:var(--ink-soft);max-width:600px;margin:0 auto;}
+
+  .billing-toggle{display:flex;justify-content:center;gap:0;margin:32px 0 8px;}
+  .billing-toggle button{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;padding:9px 20px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink-soft);}
+  .billing-toggle button:first-child{border-radius:8px 0 0 8px;}
+  .billing-toggle button:last-child{border-radius:0 8px 8px 0;border-left:none;}
+  .billing-toggle button.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .save-note{text-align:center;font-family:-apple-system,'Segoe UI',sans-serif;font-size:13px;color:var(--accent);margin-bottom:36px;}
+
+  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding-bottom:20px;align-items:start;}
+  .tier{background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px 24px;display:flex;flex-direction:column;}
+  .tier.featured{border:2px solid var(--accent);box-shadow:0 12px 40px -20px rgba(15,111,92,0.5);position:relative;}
+  .tier.featured .ribbon{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-family:-apple-system,'Segoe UI',sans-serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 14px;border-radius:20px;white-space:nowrap;}
+  .tier h2{font-size:22px;margin-bottom:4px;}
+  .tier .desc{font-family:-apple-system,'Segoe UI',sans-serif;font-size:13px;color:var(--ink-soft);min-height:52px;}
+  .price{margin:18px 0 4px;}
+  .price .amt{font-size:40px;font-weight:700;letter-spacing:-0.02em;}
+  .price .per{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--ink-soft);}
+  .price .gst{font-family:-apple-system,'Segoe UI',sans-serif;font-size:12px;color:var(--ink-soft);display:block;margin-top:2px;}
+  .cta{font-family:-apple-system,'Segoe UI',sans-serif;font-size:15px;font-weight:600;text-align:center;padding:12px;border-radius:9px;border:1px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer;margin:20px 0;text-decoration:none;display:block;transition:all .15s;}
+  .cta:hover{background:var(--ink);color:#fff;}
+  .tier.featured .cta{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .tier.featured .cta:hover{background:#0c5a4a;}
+  .feat{list-style:none;font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;}
+  .feat li{padding:8px 0;padding-left:26px;position:relative;border-top:1px solid var(--line);color:var(--ink);}
+  .feat li:before{content:'✓';position:absolute;left:0;color:var(--accent);font-weight:700;}
+  .feat li.off{color:#b3b0a8;}
+  .feat li.off:before{content:'–';color:#cbc8bf;}
+  .feat li .hl{font-weight:600;}
+
+  .compare{padding:56px 0;}
+  .compare h3{font-size:28px;text-align:center;margin-bottom:8px;}
+  .compare .sub{text-align:center;font-family:-apple-system,'Segoe UI',sans-serif;color:var(--ink-soft);font-size:15px;margin-bottom:32px;}
+  table{width:100%;border-collapse:collapse;font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  th,td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line);}
+  thead th{background:var(--ink);color:#fff;font-size:13px;letter-spacing:0.02em;}
+  thead th:not(:first-child){text-align:center;}
+  td:not(:first-child){text-align:center;color:var(--ink-soft);}
+  tbody tr:last-child td{border-bottom:none;}
+  .row-cat{background:var(--accent-soft);font-weight:700;color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;}
+  .yes{color:var(--accent);font-weight:700;}
+  .no{color:#c9c6bd;}
+
+  .faq{padding:20px 0 60px;}
+  .faq h3{font-size:28px;text-align:center;margin-bottom:32px;}
+  .faq-item{max-width:760px;margin:0 auto 8px;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden;}
+  .faq-q{font-family:-apple-system,'Segoe UI',sans-serif;font-weight:600;padding:16px 20px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:15px;}
+  .faq-a{font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;color:var(--ink-soft);padding:0 20px;max-height:0;overflow:hidden;transition:all .25s;}
+  .faq-a.open{max-height:300px;padding:0 20px 18px;}
+  .faq-q .chev{color:var(--accent);transition:transform .2s;}
+  .faq-q.open .chev{transform:rotate(180deg);}
+
+  footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;font-family:-apple-system,'Segoe UI',sans-serif;font-size:13px;color:var(--ink-soft);}
+
+  @media(max-width:860px){
+    .tiers{grid-template-columns:1fr;}
+    .hero h1{font-size:32px;}
+    .compare{overflow-x:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">PO<span>Flow</span></div>
+    <div class="by">by Garg Shekhar &amp; Company</div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Purchase Orders · Vendors · Invoice Approval</div>
+    <h1>Procurement that speaks GST.</h1>
+    <p>Raise POs, onboard vendors, and approve invoices with CGST/SGST/IGST worked out for you — built by chartered accountants, not generic software vendors.</p>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="billing-toggle sans">
+    <button id="btn-monthly" class="active" onclick="setBilling('monthly')">Monthly</button>
+    <button id="btn-annual" onclick="setBilling('annual')">Annual</button>
+  </div>
+  <div class="save-note" id="save-note">Switch to annual and get 2 months free.</div>
+
+  <div class="tiers">
+    <!-- BASIC -->
+    <div class="tier">
+      <h2>Basic</h2>
+      <div class="desc">For a single business putting its purchase orders on rails for the first time.</div>
+      <div class="price">
+        <span class="amt" data-monthly="₹999" data-annual="₹9,990">₹999</span>
+        <span class="per" data-monthly="/month" data-annual="/year">/month</span>
+        <span class="gst">+ 18% GST</span>
+      </div>
+      <a class="cta" href="#">Start 14-day trial</a>
+      <ul class="feat">
+        <li>Up to <span class="hl">3</span> team users</li>
+        <li>Up to <span class="hl">25</span> vendors</li>
+        <li><span class="hl">50</span> POs + invoices / month</li>
+        <li>GST split: CGST/SGST &amp; IGST</li>
+        <li>PO PDF &amp; email to vendor</li>
+        <li>Single-level approval</li>
+        <li class="off">Multi-level approval</li>
+        <li class="off">Invoice–PO match reasons</li>
+        <li class="off">Custom letterhead &amp; T&amp;C</li>
+      </ul>
+    </div>
+
+    <!-- PROFESSIONAL -->
+    <div class="tier featured">
+      <div class="ribbon">Most popular</div>
+      <h2>Professional</h2>
+      <div class="desc">For a growing SME with a real procurement process and a team that approves spend.</div>
+      <div class="price">
+        <span class="amt" data-monthly="₹2,499" data-annual="₹24,990">₹2,499</span>
+        <span class="per" data-monthly="/month" data-annual="/year">/month</span>
+        <span class="gst">+ 18% GST</span>
+      </div>
+      <a class="cta" href="#">Start 14-day trial</a>
+      <ul class="feat">
+        <li>Up to <span class="hl">10</span> team users</li>
+        <li>Up to <span class="hl">150</span> vendors</li>
+        <li><span class="hl">500</span> POs + invoices / month</li>
+        <li>GST split: CGST/SGST &amp; IGST</li>
+        <li>PO PDF &amp; email to vendor</li>
+        <li><span class="hl">Multi-level</span> approval (up to 3)</li>
+        <li>Invoice–PO match: <span class="hl">matched / partial / unmatched with reasons</span></li>
+        <li>Custom letterhead &amp; T&amp;C on PO</li>
+        <li class="off">Automatic email delivery</li>
+      </ul>
+    </div>
+
+    <!-- ADVANCED -->
+    <div class="tier">
+      <h2>Advanced</h2>
+      <div class="desc">For multi-entity or high-volume procurement that never wants to hit a ceiling.</div>
+      <div class="price">
+        <span class="amt" data-monthly="₹4,999" data-annual="₹49,990">₹4,999</span>
+        <span class="per" data-monthly="/month" data-annual="/year">/month</span>
+        <span class="gst">+ 18% GST</span>
+      </div>
+      <a class="cta" href="#">Talk to us</a>
+      <ul class="feat">
+        <li><span class="hl">Unlimited</span> team users</li>
+        <li><span class="hl">Unlimited</span> vendors</li>
+        <li><span class="hl">Unlimited</span> POs + invoices</li>
+        <li>GST split: CGST/SGST &amp; IGST</li>
+        <li>PO PDF &amp; <span class="hl">automatic</span> email delivery</li>
+        <li>Multi-level approval (up to 5) + PO sign-off</li>
+        <li>Invoice–PO match + CSV export</li>
+        <li>Custom letterhead &amp; T&amp;C on PO</li>
+        <li>Full audit log &amp; priority support</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<section class="compare">
+  <div class="wrap">
+    <h3>Compare every feature</h3>
+    <div class="sub sans">All plans include GST-aware documents, secure vendor portals, and per-company data isolation.</div>
+    <table>
+      <thead>
+        <tr><th>Feature</th><th>Basic</th><th>Professional</th><th>Advanced</th></tr>
+      </thead>
+      <tbody>
+        <tr class="row-cat"><td colspan="4">Capacity</td></tr>
+        <tr><td>Team users</td><td>3</td><td>10</td><td>Unlimited</td></tr>
+        <tr><td>Vendors</td><td>25</td><td>150</td><td>Unlimited</td></tr>
+        <tr><td>POs + invoices / month</td><td>50</td><td>500</td><td>Unlimited</td></tr>
+        <tr class="row-cat"><td colspan="4">Purchase orders</td></tr>
+        <tr><td>PO with HSN/SAC &amp; auto GST rate</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>CGST/SGST vs IGST auto-split</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>PO PDF with amount in words</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Custom letterhead &amp; T&amp;C annexure</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Email PO to vendor (manual)</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Automatic email delivery</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+        <tr><td>Reusable PO templates</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr class="row-cat"><td colspan="4">Approvals &amp; matching</td></tr>
+        <tr><td>Approval levels</td><td>1</td><td>Up to 3</td><td>Up to 5</td></tr>
+        <tr><td>PO sign-off before dispatch</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Invoice–PO matching</td><td>Basic</td><td>Full + reasons</td><td>Full + reasons</td></tr>
+        <tr><td>CSV export for reconciliation</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr class="row-cat"><td colspan="4">Trust &amp; support</td></tr>
+        <tr><td>Per-company data isolation</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Full activity / audit log</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Support</td><td>Email 48h</td><td>Priority 24h</td><td>Phone + WhatsApp</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="faq">
+  <div class="wrap">
+    <h3>Questions, answered</h3>
+    <div class="faq-item">
+      <div class="faq-q sans" onclick="toggleFaq(this)">Is GST included in the price shown?<span class="chev">⌄</span></div>
+      <div class="faq-a">No — prices are exclusive of GST. 18% GST applies on the subscription, so a ₹2,499/month plan is ₹2,949 all-in. As a chartered accountancy firm, we issue a proper tax invoice you can claim input credit against.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q sans" onclick="toggleFaq(this)">What happens after the 14-day trial?<span class="chev">⌄</span></div>
+      <div class="faq-a">Your account stays active with full features during the trial. At the end, pick a plan to continue. Your data is never deleted without notice, and nothing is charged automatically unless you choose a paid plan.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q sans" onclick="toggleFaq(this)">Can I change plans later?<span class="chev">⌄</span></div>
+      <div class="faq-a">Yes, upgrade or downgrade anytime. Upgrades take effect immediately; downgrades apply from your next billing cycle, as long as your usage fits the lower plan's limits.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q sans" onclick="toggleFaq(this)">Is my company's data separated from other companies?<span class="chev">⌄</span></div>
+      <div class="faq-a">Completely. Every record is isolated at the database level, so one company can never see another's vendors, POs, or invoices — even through the API. This is enforced by row-level security, not just the interface.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q sans" onclick="toggleFaq(this)">Do vendors pay anything?<span class="chev">⌄</span></div>
+      <div class="faq-a">No. Vendors sign in free to view the POs you send them and upload their invoices. The subscription is billed only to your business.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    POFlow · A procurement product by Garg Shekhar &amp; Company, Chartered Accountants · Meerut &amp; Noida<br>
+    Prices in INR, exclusive of GST. Features listed reflect current availability.
+  </div>
+</footer>
+
+<script>
+function setBilling(mode){
+  document.getElementById('btn-monthly').classList.toggle('active', mode==='monthly');
+  document.getElementById('btn-annual').classList.toggle('active', mode==='annual');
+  document.getElementById('save-note').textContent = mode==='annual'
+    ? 'You are saving 2 months versus paying monthly.'
+    : 'Switch to annual and get 2 months free.';
+  document.querySelectorAll('.price .amt, .price .per').forEach(el=>{
+    el.textContent = el.getAttribute('data-'+mode);
+  });
+}
+function toggleFaq(q){
+  q.classList.toggle('open');
+  const a = q.nextElementSibling;
+  a.classList.toggle('open');
+}
+</script>
+</body>
+</html>
