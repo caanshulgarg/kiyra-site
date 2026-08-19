@@ -27,6 +27,8 @@
   .nav-links{display:flex;align-items:center;gap:28px;font-size:14px;}
   .nav-links a{color:var(--ink-soft);font-weight:500;}
   .nav-links a:hover{color:var(--ink);}
+  .nav-login{font-weight:600!important;color:var(--ink)!important;}
+  .nav-login:hover{color:var(--primary)!important;}
   .btn{display:inline-block;font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;transition:all .15s;border:1px solid var(--ink);color:var(--ink);background:transparent;}
   .btn:hover{background:var(--ink);color:#fff;}
   .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff;}
@@ -110,7 +112,7 @@
     .steps{grid-template-columns:1fr 1fr;}
     .feat-grid{grid-template-columns:1fr;}
     .hero h1{font-size:40px;}
-    .nav-links a:not(.btn){display:none;}
+    .nav-links a:not(.btn):not(.nav-login){display:none;}
   }
   @media(max-width:520px){
     .steps{grid-template-columns:1fr;}
@@ -128,6 +130,7 @@
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
       <a href="pricing.html">Pricing</a>
+      <a href="https://app.kiyra.ai" class="nav-login">Login</a>
       <a href="https://app.kiyra.ai" class="btn btn-primary">Start free trial</a>
     </div>
   </div>
