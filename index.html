@@ -3,2160 +3,305 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Kiyra — PO & Vendor Invoice Management</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Kiyra — GST-native Purchase Orders, Vendors &amp; Invoice Approval</title>
+<meta name="description" content="Raise purchase orders, onboard vendors, and approve invoices with CGST/SGST/IGST worked out for you. Built by chartered accountants for Indian businesses." />
 <style>
-  /* ============================================================
-     Kiyra — "Modern Ledger" design system
-     Deep ink navy + accountant's green, tabular numerals,
-     disciplined hairline structure. Built for finance/procurement
-     users who value precision and trust over flash.
-     ============================================================ */
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
   :root{
-    --bg:#f0f1ec;            /* warm paper-grey, like ledger stock */
-    --card:#ffffff;
-    --border:#e0e2da;
-    --border-strong:#c9ccc0;
-    --ink:#16202e;           /* deep ink navy — primary text & chrome */
-    --ink-soft:#5a6472;
-    --text:#16202e;
-    --muted:#6b7280;
-    --primary:#0f6f5c;       /* accountant's green (ledger credit) */
-    --primary-dark:#0c5a4a;
-    --primary-soft:#e4f0ec;
-    --green:#0f6f5c;
-    --red:#b23b3b;
-    --amber:#b8893a;         /* muted brass */
-    --blue:#3b5b9b;
-    --radius:12px;
-    --shadow:0 1px 2px rgba(22,32,46,0.04), 0 8px 24px -16px rgba(22,32,46,0.18);
-    --num:'Inter';
+    --bg:#f0f1ec; --card:#ffffff; --border:#e0e2da; --border-strong:#c9ccc0;
+    --ink:#16202e; --ink-soft:#5a6472; --primary:#0f6f5c; --primary-dark:#0c5a4a;
+    --primary-soft:#e4f0ec; --amber:#b8893a; --blue:#3b5b9b; --red:#b23b3b;
   }
-  *{box-sizing:border-box;}
-  body{margin:0;font-family:'Inter',-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-feature-settings:'tnum' 1,'cv05' 1;}
-  .app{max-width:1220px;margin:0 auto;padding:26px 24px 60px;}
-
-  /* top chrome */
-  header.topbar{display:flex;justify-content:space-between;align-items:center;padding:0 26px;height:60px;background:var(--ink);color:#fff;position:sticky;top:0;z-index:30;}
-  header.topbar h1{font-family:'Fraunces',serif;font-size:19px;font-weight:600;margin:0;letter-spacing:-0.01em;color:#fff;}
-  header.topbar h1 .mark{color:#5cc9a7;}
-  header.topbar .who{font-size:12.5px;color:#aeb8c4;letter-spacing:0.01em;}
-  header.topbar .btn{background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.16);}
-  header.topbar .btn:hover{background:rgba(255,255,255,0.16);}
-
-  /* buttons */
-  .btn{padding:9px 15px;border-radius:9px;border:1px solid var(--border-strong);background:var(--card);cursor:pointer;font-size:13.5px;font-weight:500;font-family:inherit;color:var(--ink);transition:all .14s ease;line-height:1.1;}
-  .btn:hover{border-color:var(--ink-soft);background:#fafbf9;}
-  .btn-primary{background:var(--primary);color:#fff;border:1px solid var(--primary);}
-  .btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);}
-  .btn-danger{background:#fff;color:var(--red);border:1px solid #e4c4c4;}
-  .btn-danger:hover{background:#fbf1f1;border-color:var(--red);}
-  .btn-green{background:var(--primary);color:#fff;border:1px solid var(--primary);}
-  .btn-green:hover{background:var(--primary-dark);}
-  .btn-sm{padding:5px 11px;font-size:12px;border-radius:7px;}
-
-  /* cards */
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px;box-shadow:var(--shadow);}
-  .card h3{font-family:'Fraunces',serif;font-weight:600;font-size:17px;letter-spacing:-0.01em;}
-  .grid{display:grid;gap:18px;}
-  .grid-2{grid-template-columns:1fr 1fr;}
-  .grid-3{grid-template-columns:repeat(3,1fr);}
-  .grid-4{grid-template-columns:repeat(4,1fr);}
-
-  /* forms */
-  input,select,textarea{width:100%;padding:10px 11px;border:1px solid var(--border-strong);border-radius:8px;font-size:14px;margin-top:5px;background:#fff;font-family:inherit;color:var(--ink);transition:border-color .14s,box-shadow .14s;}
-  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
-  label{font-size:11px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
-
-  /* tables */
-  table{width:100%;border-collapse:collapse;font-size:13.5px;}
-  th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--border);}
-  th{color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
-  tbody tr{transition:background .12s;}
-  tbody tr:hover{background:#fafbf8;}
-
-  /* badges */
-  .badge{padding:3px 10px;border-radius:6px;font-size:10.5px;font-weight:600;display:inline-block;letter-spacing:.03em;text-transform:uppercase;border:1px solid transparent;}
-  .badge-draft{background:#eceee9;color:#5a6472;}
-  .badge-sent{background:#e8eef8;color:#3b5b9b;}
-  .badge-pending_approval{background:#f7efe0;color:#8a6420;}
-  .badge-acknowledged{background:#e8eef8;color:#3b5b9b;}
-  .badge-closed{background:#eceee9;color:#5a6472;}
-  .badge-cancelled{background:#f8eded;color:#a33;}
-  .badge-submitted{background:#f7efe0;color:#8a6420;}
-  .badge-under_review{background:#f7efe0;color:#8a6420;}
-  .badge-approved{background:#e2efea;color:#0f6f5c;}
-  .badge-rejected{background:#f8eded;color:#a33;}
-  .badge-paid{background:#e8eef8;color:#2f4a80;}
-  .badge-active{background:#e2efea;color:#0f6f5c;}
-  .badge-pending{background:#f7efe0;color:#8a6420;}
-  .badge-disabled,.badge-suspended{background:#f8eded;color:#a33;}
-
-  /* tabs */
-  .tabs{display:flex;gap:2px;margin-bottom:22px;border-bottom:1px solid var(--border);}
-  .tab{padding:11px 17px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--ink-soft);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .14s;}
-  .tab:hover{color:var(--ink);}
-  .tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600;}
-
-  /* login */
-  .login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(160deg,#16202e 0%,#1d3040 55%,#12433a 100%);padding:20px;}
-  .login-card{width:390px;box-shadow:0 24px 60px -20px rgba(0,0,0,0.5);}
-  .login-card h2{font-family:'Fraunces',serif;font-weight:700;font-size:26px;letter-spacing:-0.02em;}
-  .brand-lockup{display:flex;align-items:baseline;gap:2px;}
-
-  /* stats / KPI */
-  .row-actions{display:flex;gap:6px;flex-wrap:wrap;}
-  .muted{color:var(--muted);font-size:13px;}
-  .stat{font-size:30px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;font-family:'Fraunces',serif;color:var(--ink);line-height:1.1;}
-  .kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
-  .kpi .kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:600;margin-bottom:8px;}
-  .kpi .kpi-value{font-size:28px;font-weight:700;font-family:'Fraunces',serif;letter-spacing:-0.02em;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;}
-  .kpi .kpi-sub{font-size:12px;color:var(--ink-soft);margin-top:6px;}
-  .kpi .kpi-accent{position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--primary);}
-  .kpi.amber .kpi-accent{background:var(--amber);}
-  .kpi.blue .kpi-accent{background:var(--blue);}
-  .kpi.red .kpi-accent{background:var(--red);}
-
-  /* modal */
-  .modal-bg{position:fixed;inset:0;background:rgba(16,24,34,0.55);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;}
-  .modal{background:#fff;border-radius:14px;padding:26px;width:460px;max-width:94vw;max-height:88vh;overflow:auto;box-shadow:0 30px 80px -20px rgba(0,0,0,0.5);}
-  .modal.wide{width:880px;}
-  .modal h3{font-family:'Fraunces',serif;font-weight:600;font-size:20px;letter-spacing:-0.01em;margin-top:0;}
-  .close-x{float:right;cursor:pointer;color:var(--ink-soft);font-size:16px;line-height:1;}
-  .close-x:hover{color:var(--ink);}
-
-  /* toast */
-  .toast{position:fixed;bottom:22px;right:22px;background:var(--ink);color:#fff;padding:13px 20px;border-radius:10px;font-size:14px;z-index:100;box-shadow:0 12px 32px -8px rgba(0,0,0,0.4);animation:toastIn .2s ease;}
-  @keyframes toastIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-
-  /* PO item rows */
-  .item-row{display:grid;grid-template-columns:3fr 1fr 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:6px;}
-  .item-row input{padding:8px;font-size:13px;margin-top:0;min-width:0;}
-
-  /* simple bar chart (analytics) */
-  .barchart{display:flex;align-items:flex-end;gap:10px;height:180px;padding-top:10px;}
-  .barchart .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;}
-  .barchart .bar{width:100%;max-width:46px;background:linear-gradient(180deg,#159e83,#0f6f5c);border-radius:5px 5px 0 0;min-height:2px;transition:height .5s cubic-bezier(.2,.8,.2,1);}
-  .barchart .bar-label{font-size:10.5px;color:var(--ink-soft);text-align:center;font-weight:500;}
-  .barchart .bar-val{font-size:11px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;}
-
-  /* donut legend */
-  .legend-row{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:7px;}
-  .legend-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
-
-  /* section eyebrow */
-  .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--primary);font-weight:600;margin-bottom:4px;}
-
-  .hidden{display:none;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.55;font-feature-settings:'tnum' 1;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
+  .serif{font-family:'Fraunces',serif;}
   a{color:var(--primary);text-decoration:none;}
-  a:hover{text-decoration:underline;}
-  code{background:#eceee9;padding:2px 7px;border-radius:5px;font-size:13px;font-family:'Inter';}
 
-  @media(max-width:820px){
-    .grid-3,.grid-4{grid-template-columns:1fr 1fr;}
-    .app{padding:18px 14px 50px;}
+  /* nav */
+  nav{position:sticky;top:0;z-index:40;background:rgba(240,241,236,0.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;}
+  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:22px;letter-spacing:-0.02em;color:var(--ink);}
+  .logo span{color:var(--primary);}
+  .nav-links{display:flex;align-items:center;gap:28px;font-size:14px;}
+  .nav-links a{color:var(--ink-soft);font-weight:500;}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-login{font-weight:600!important;color:var(--ink)!important;}
+  .nav-login:hover{color:var(--primary)!important;}
+  .btn{display:inline-block;font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;transition:all .15s;border:1.5px solid var(--ink);color:var(--ink);background:transparent;text-decoration:none;}
+  .btn:hover{background:var(--ink);color:#fff;}
+  /* outline button — for Login */
+  .btn-outline{border:1.5px solid var(--primary);color:var(--primary);background:#fff;}
+  .btn-outline:hover{background:var(--primary-soft);color:var(--primary-dark);}
+  /* solid green button — for Register / trial. Force white text for contrast. */
+  a.btn-primary,
+  a.btn-primary:link,
+  a.btn-primary:visited,
+  a.btn-primary:hover,
+  a.btn-primary:active{background:var(--primary);border:1.5px solid var(--primary);color:#ffffff !important;}
+  a.btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);}
+
+  /* hero */
+  .hero{padding:80px 0 60px;}
+  .hero-grid{display:grid;grid-template-columns:1.05fr 0.95fr;gap:56px;align-items:center;}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--primary);margin-bottom:20px;}
+  .hero h1{font-family:'Fraunces',serif;font-size:52px;line-height:1.05;letter-spacing:-0.025em;font-weight:600;margin-bottom:22px;}
+  .hero h1 em{font-style:italic;color:var(--primary);}
+  .hero p.lead{font-size:18px;color:var(--ink-soft);margin-bottom:32px;max-width:520px;}
+  .hero-cta{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+  .hero-note{font-size:13px;color:var(--ink-soft);margin-top:18px;}
+
+  /* hero visual — a stylized "ledger" document card */
+  .doc-card{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 30px 60px -30px rgba(22,32,46,0.3);padding:24px;transform:rotate(-1.2deg);}
+  .doc-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:14px;}
+  .doc-head .t{font-family:'Fraunces',serif;font-weight:600;font-size:16px;}
+  .doc-head .n{font-size:11px;color:var(--ink-soft);text-align:right;}
+  .doc-row{display:grid;grid-template-columns:1.6fr 0.6fr 0.8fr 0.9fr;gap:8px;font-size:11.5px;padding:7px 0;border-bottom:1px solid var(--border);}
+  .doc-row.h{color:var(--ink-soft);font-weight:600;text-transform:uppercase;font-size:9.5px;letter-spacing:0.04em;}
+  .doc-row .r{text-align:right;font-variant-numeric:tabular-nums;}
+  .doc-tot{display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;font-weight:700;font-family:'Fraunces',serif;font-size:15px;}
+  .doc-badge{display:inline-block;background:var(--primary-soft);color:var(--primary);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:3px 9px;border-radius:5px;margin-top:12px;}
+  .gst-split{display:flex;gap:8px;font-size:10.5px;color:var(--ink-soft);margin-top:8px;}
+  .gst-split span{background:#f4f5f0;padding:3px 8px;border-radius:5px;}
+
+  /* trust bar */
+  .trust{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#fff;padding:22px 0;}
+  .trust .wrap{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap;text-align:center;}
+  .trust .item{font-size:13px;color:var(--ink-soft);}
+  .trust .item strong{color:var(--ink);font-weight:600;}
+
+  /* sections */
+  section{padding:76px 0;}
+  .sec-head{text-align:center;max-width:640px;margin:0 auto 52px;}
+  .sec-head h2{font-family:'Fraunces',serif;font-size:36px;line-height:1.12;letter-spacing:-0.02em;font-weight:600;margin-bottom:14px;}
+  .sec-head p{font-size:16px;color:var(--ink-soft);}
+
+  /* how it works — numbered steps */
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;counter-reset:step;}
+  .step{position:relative;padding-top:8px;}
+  .step .num{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--primary);border:1.5px solid var(--primary);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+  .step h3{font-size:16px;font-weight:600;margin-bottom:7px;}
+  .step p{font-size:14px;color:var(--ink-soft);}
+
+  /* feature cards */
+  .features{background:#fff;}
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+  .feat{border:1px solid var(--border);border-radius:14px;padding:26px;transition:border-color .15s,transform .15s;}
+  .feat:hover{border-color:var(--primary);transform:translateY(-2px);}
+  .feat .ic{width:40px;height:40px;border-radius:10px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;margin-bottom:16px;color:var(--primary);font-family:'Fraunces',serif;font-weight:700;font-size:18px;}
+  .feat h3{font-size:17px;font-weight:600;margin-bottom:8px;}
+  .feat p{font-size:14px;color:var(--ink-soft);}
+
+  /* differentiator band */
+  .band{background:var(--ink);color:#fff;}
+  .band .wrap{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+  .band h2{font-family:'Fraunces',serif;font-size:34px;line-height:1.15;letter-spacing:-0.02em;font-weight:600;margin-bottom:18px;}
+  .band h2 em{font-style:italic;color:#5cc9a7;}
+  .band p{font-size:16px;color:#aeb8c4;margin-bottom:14px;}
+  .band ul{list-style:none;margin-top:22px;}
+  .band li{font-size:15px;padding:9px 0 9px 28px;position:relative;color:#e3e8ee;border-top:1px solid rgba(255,255,255,0.08);}
+  .band li:before{content:'✓';position:absolute;left:0;color:#5cc9a7;font-weight:700;}
+
+  /* CTA */
+  .cta-final{text-align:center;}
+  .cta-final h2{font-family:'Fraunces',serif;font-size:38px;letter-spacing:-0.02em;font-weight:600;margin-bottom:16px;}
+  .cta-final p{font-size:17px;color:var(--ink-soft);margin-bottom:28px;}
+
+  footer{border-top:1px solid var(--border);padding:40px 0;background:#fff;}
+  footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+  footer .logo{font-size:18px;}
+  footer .fnote{font-size:13px;color:var(--ink-soft);}
+  footer .flinks{display:flex;gap:22px;font-size:14px;}
+  footer .flinks a{color:var(--ink-soft);}
+
+  @media(max-width:900px){
+    .hero-grid,.band .wrap{grid-template-columns:1fr;gap:40px;}
+    .steps{grid-template-columns:1fr 1fr;}
+    .feat-grid{grid-template-columns:1fr;}
+    .hero h1{font-size:40px;}
+    .nav-links a:not(.btn){display:none;}
+    .nav-links{gap:10px;}
+    .btn{padding:8px 14px;font-size:13px;}
   }
   @media(max-width:520px){
-    .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}
+    .steps{grid-template-columns:1fr;}
+    .hero h1{font-size:33px;}
+    section{padding:56px 0;}
   }
 </style>
 </head>
 <body>
 
-<div id="root"></div>
-<div id="toast-holder"></div>
-
-<script>
-// ============================================================
-// CONFIG — fill these in with your Supabase project details
-// ============================================================
-const SUPABASE_URL = "https://dqsygmahfyvrxwpdyqcv.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxc3lnbWFoZnl2cnh3cGR5cWN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzI3MTksImV4cCI6MjEwMjU0ODcxOX0.5fY0In_MQncov1DEaWFH9VONS8i2HoGSk5Ps0m4ytQs";
-
-let sb = null;
-let CONFIG_ERROR = null;
-
-function isValidHttpUrl(str){
-  try {
-    const u = new URL(str);
-    return u.protocol === 'http:' || u.protocol === 'https:';
-  } catch(e){ return false; }
-}
-
-if(!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL" || !isValidHttpUrl(SUPABASE_URL)){
-  CONFIG_ERROR = `SUPABASE_URL is missing or invalid: "${SUPABASE_URL}". It must look like https://xxxxxxxx.supabase.co (from Supabase → Settings → API → Project URL).`;
-} else if(!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_KEY" || SUPABASE_ANON_KEY.length < 20){
-  CONFIG_ERROR = `SUPABASE_ANON_KEY is missing or looks invalid. Copy the "anon public" key from Supabase → Settings → API.`;
-} else {
-  try {
-    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } catch(e){
-    CONFIG_ERROR = `Supabase client failed to initialize: ${e.message}`;
-  }
-}
-
-function renderConfigError(){
-  document.getElementById('root').innerHTML = `
-  <div class="login-wrap">
-    <div class="card login-card" style="width:480px;">
-      <h2 style="margin-top:0;color:var(--red);">Setup needed</h2>
-      <p>${CONFIG_ERROR}</p>
-      <p class="muted">Open index.html, find the two lines near the top of the &lt;script&gt; tag (SUPABASE_URL and SUPABASE_ANON_KEY), and paste in your real values from your Supabase project's Settings → API page. Then re-save/re-upload the file.</p>
+<nav>
+  <div class="wrap">
+    <div class="logo">Kiy<span>ra</span></div>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="https://app.kiyra.ai" class="btn btn-outline">Login</a>
+      <a href="https://app.kiyra.ai" class="btn btn-primary">Register</a>
     </div>
-  </div>`;
-}
-
-// Creates a brand-new, isolated Supabase client (its own auth state, not persisted
-// to localStorage) purely for signing up OTHER users (company admins, team members).
-// This is necessary because calling auth.signUp() on the main `sb` client would
-// switch the CURRENT logged-in session over to the newly created user — which is
-// exactly what we don't want when a superadmin/admin is creating someone else's login.
-function scratchClient(){
-  return supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-  });
-}
-
-// ============================================================
-// STATE
-// ============================================================
-let state = {
-  session: null,
-  role: null,          // 'superadmin' | 'company_admin' | 'approver' | 'staff' | 'vendor'
-  profile: null,        // row from superadmins / company_users / vendors
-  company: null,        // current company row (for non-superadmin)
-  activeTab: null,
-};
-
-function toast(msg, isError){
-  const el = document.createElement('div');
-  el.className = 'toast';
-  if(isError) el.style.background = '#b91c1c';
-  el.textContent = msg;
-  document.getElementById('toast-holder').appendChild(el);
-  setTimeout(()=>el.remove(), 3500);
-}
-
-function fmtMoney(n){
-  return '₹' + Number(n||0).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-function fmtDate(d){
-  if(!d) return '-';
-  return new Date(d).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
-}
-function badge(status){
-  return `<span class="badge badge-${status}">${status.replace('_',' ')}</span>`;
-}
-async function logActivity(companyId, action, entityType, entityId, details){
-  try{
-    await sb.from('activity_log').insert({
-      company_id: companyId,
-      actor_auth_user_id: state.session.user.id,
-      actor_label: `${state.role}: ${state.profile?.name || state.profile?.email || ''}`,
-      action, entity_type: entityType, entity_id: entityId, details: details || {}
-    });
-  }catch(e){ console.warn('activity log failed', e); }
-}
-
-// ============================================================
-// AUTH / BOOTSTRAP
-// ============================================================
-async function boot(){
-  if(CONFIG_ERROR){ renderConfigError(); return; }
-  // If the user arrived via a password-recovery link, the URL contains a recovery token.
-  // Show the reset form instead of the normal app.
-  if(window.location.hash.includes('type=recovery')){
-    showResetPasswordForm();
-    return;
-  }
-  try{
-    const { data: { session } } = await sb.auth.getSession();
-    state.session = session;
-    if(!session){ renderLogin(); return; }
-    await resolveRole();
-  } catch(e){
-    document.getElementById('root').innerHTML = `
-    <div class="login-wrap"><div class="card login-card" style="width:480px;">
-      <h2 style="margin-top:0;color:var(--red);">Something went wrong</h2>
-      <p>${e.message || e}</p>
-      <p class="muted">Open the browser console (F12) for more detail, or check that schema.sql has been run in your Supabase project.</p>
-    </div></div>`;
-  }
-}
-
-// ---- Plan limits ----
-async function loadPlanLimits(){
-  const planName = (state.company.plan || 'trial').toLowerCase();
-  const { data } = await sb.from('plan_limits').select('*').eq('plan', planName).maybeSingle();
-  // fall back to a permissive default if the plan row is missing
-  state.plan = data || { plan: planName, max_users:null, max_vendors:null, max_docs_per_month:null, max_approval_levels:5, allow_partial_match:true, allow_custom_letterhead:true, allow_auto_email:false, price_monthly:0 };
-}
-function planAllowsMore(count, limit){
-  return limit === null || limit === undefined || count < limit;
-}
-async function countRows(table){
-  const { count } = await sb.from(table).select('id', {count:'exact', head:true}).eq('company_id', state.company.id);
-  return count || 0;
-}
-async function docsThisMonth(){
-  const start = new Date(); start.setDate(1); start.setHours(0,0,0,0);
-  const iso = start.toISOString();
-  const { count: poCount } = await sb.from('purchase_orders').select('id',{count:'exact',head:true}).eq('company_id', state.company.id).gte('created_at', iso);
-  const { count: invCount } = await sb.from('invoices').select('id',{count:'exact',head:true}).eq('company_id', state.company.id).gte('submitted_at', iso);
-  return (poCount||0) + (invCount||0);
-}
-
-async function resolveRole(){
-  const uid = state.session.user.id;
-  const errors = [];
-
-  let { data: sa, error: saErr } = await sb.from('superadmins').select('*').eq('auth_user_id', uid).maybeSingle();
-  if(saErr) errors.push('superadmins: '+saErr.message);
-  if(sa){ state.role='superadmin'; state.profile=sa; renderSuperadmin(); return; }
-
-  let { data: cu, error: cuErr } = await sb.from('company_users').select('*, companies(*)').eq('auth_user_id', uid).maybeSingle();
-  if(cuErr) errors.push('company_users: '+cuErr.message);
-  if(cu){ state.role = cu.role; state.profile = cu; state.company = cu.companies; await loadPlanLimits(); renderCompanyApp(); return; }
-
-  let { data: v, error: vErr } = await sb.from('vendors').select('*, companies(*)').eq('auth_user_id', uid).maybeSingle();
-  if(vErr) errors.push('vendors: '+vErr.message);
-  if(v){ state.role='vendor'; state.profile=v; state.company=v.companies; renderVendorApp(); return; }
-
-  // logged in but no role row found yet (or a query above errored — surface it so it's diagnosable)
-  document.getElementById('root').innerHTML = `<div class="login-wrap"><div class="card login-card" style="width:480px;">
-    <p>Your account isn't linked to a company or vendor profile yet.</p>
-    <p class="muted">Ask your company admin (or superadmin) to add you.</p>
-    ${errors.length ? `<p style="color:var(--red);font-size:12px;margin-top:10px;">Debug info: ${errors.join(' · ')}</p>` : `<p class="muted" style="font-size:12px;margin-top:10px;">Debug: no errors from the database — no matching row was found for this account (auth uid: ${uid}).</p>`}
-    <button class="btn" onclick="signOut()">Sign out</button>
-  </div></div>`;
-}
-
-async function signOut(){
-  await sb.auth.signOut();
-  state = {session:null, role:null, profile:null, company:null, activeTab:null};
-  renderLogin();
-}
-
-// ============================================================
-// LOGIN VIEW
-// ============================================================
-function renderLogin(){
-  document.getElementById('root').innerHTML = `
-  <div class="login-wrap">
-    <div class="card login-card">
-      <div class="brand-lockup"><h2 style="margin:0;">Kiy<span style="color:var(--primary);">ra</span></h2></div>
-      <p class="muted" style="margin-top:2px;">Purchase orders, vendors &amp; invoice approval</p>
-      <div class="tabs" style="margin:18px 0 16px;">
-        <div class="tab active" id="tab-signin" onclick="switchAuthTab('signin')">Sign in</div>
-        <div class="tab" id="tab-signup" onclick="switchAuthTab('signup')">Vendor sign up</div>
-      </div>
-      <div id="auth-signin">
-        <label>Email</label>
-        <input id="login-email" type="email" placeholder="you@company.com"/>
-        <label style="margin-top:12px;display:block;">Password</label>
-        <input id="login-pass" type="password" placeholder="••••••••"/>
-        <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="doSignIn()">Sign in</button>
-        <p style="margin-top:12px;text-align:center;"><a href="#" onclick="showForgotPassword();return false;" style="font-size:13px;">Forgot password?</a></p>
-        <p class="muted" id="login-msg" style="margin-top:8px;color:var(--red);"></p>
-      </div>
-      <div id="auth-signup" class="hidden">
-        <p class="muted">Vendors: sign up with the code your client gave you, then wait for them to activate your account.</p>
-        <label style="margin-top:8px;display:block;">Company code</label>
-        <input id="signup-slug" placeholder="e.g. abc-traders"/>
-        <label style="margin-top:12px;display:block;">Business name</label>
-        <input id="signup-name" placeholder="Your business name"/>
-        <label style="margin-top:12px;display:block;">Email</label>
-        <input id="signup-email" type="email"/>
-        <label style="margin-top:12px;display:block;">Password</label>
-        <input id="signup-pass" type="password"/>
-        <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="doVendorSignup()">Create vendor account</button>
-        <p class="muted" id="signup-msg" style="margin-top:8px;"></p>
-      </div>
-    </div>
-  </div>`;
-}
-function switchAuthTab(t){
-  document.getElementById('tab-signin').classList.toggle('active', t==='signin');
-  document.getElementById('tab-signup').classList.toggle('active', t==='signup');
-  document.getElementById('auth-signin').classList.toggle('hidden', t!=='signin');
-  document.getElementById('auth-signup').classList.toggle('hidden', t!=='signup');
-}
-async function doSignIn(){
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-pass').value;
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
-  if(error){ document.getElementById('login-msg').textContent = error.message; return; }
-  state.session = data.session;
-  await resolveRole();
-}
-
-// ---- Forgot password: send reset email ----
-function showForgotPassword(){
-  document.getElementById('root').innerHTML = `
-  <div class="login-wrap">
-    <div class="card login-card">
-      <h2 style="margin-top:0;">Reset password</h2>
-      <p class="muted">Enter your account email. We'll send you a link to set a new password.</p>
-      <label style="margin-top:8px;display:block;">Email</label>
-      <input id="fp-email" type="email" placeholder="you@company.com"/>
-      <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="sendResetEmail()">Send reset link</button>
-      <p style="margin-top:10px;text-align:center;"><a href="#" onclick="renderLogin();return false;" style="font-size:13px;">Back to sign in</a></p>
-      <p id="fp-msg" style="margin-top:8px;font-size:13px;"></p>
-    </div>
-  </div>`;
-}
-async function sendResetEmail(){
-  const email = document.getElementById('fp-email').value.trim();
-  const msg = document.getElementById('fp-msg');
-  msg.style.color = 'var(--red)';
-  if(!email){ msg.textContent = 'Enter your email.'; return; }
-  // The redirect brings the user back to this app with a recovery token in the URL,
-  // which onAuthStateChange picks up as a PASSWORD_RECOVERY event.
-  const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + window.location.pathname
-  });
-  if(error){ msg.textContent = error.message; return; }
-  msg.style.color = 'var(--green)';
-  msg.textContent = 'If an account exists for that email, a reset link has been sent. Check your inbox (and spam).';
-}
-
-// ---- Set new password (shown when user returns via the reset link) ----
-function showResetPasswordForm(){
-  document.getElementById('root').innerHTML = `
-  <div class="login-wrap">
-    <div class="card login-card">
-      <h2 style="margin-top:0;">Set a new password</h2>
-      <p class="muted">Enter and confirm your new password.</p>
-      <label style="margin-top:8px;display:block;">New password (min 6 characters)</label>
-      <input id="rp-pass" type="password"/>
-      <label style="margin-top:10px;display:block;">Confirm new password</label>
-      <input id="rp-pass2" type="password"/>
-      <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="submitNewPassword()">Update password</button>
-      <p id="rp-msg" style="margin-top:8px;font-size:13px;"></p>
-    </div>
-  </div>`;
-}
-async function submitNewPassword(){
-  const p1 = document.getElementById('rp-pass').value;
-  const p2 = document.getElementById('rp-pass2').value;
-  const msg = document.getElementById('rp-msg');
-  msg.style.color = 'var(--red)';
-  if(p1.length < 6){ msg.textContent = 'Password must be at least 6 characters.'; return; }
-  if(p1 !== p2){ msg.textContent = 'Passwords do not match.'; return; }
-  const { error } = await sb.auth.updateUser({ password: p1 });
-  if(error){ msg.textContent = error.message; return; }
-  msg.style.color = 'var(--green)';
-  msg.textContent = 'Password updated. Loading your account…';
-  state.session = (await sb.auth.getSession()).data.session;
-  setTimeout(()=>resolveRole(), 800);
-}
-async function doVendorSignup(){
-  const slug = document.getElementById('signup-slug').value.trim().toLowerCase();
-  const name = document.getElementById('signup-name').value.trim();
-  const email = document.getElementById('signup-email').value.trim();
-  const password = document.getElementById('signup-pass').value;
-  const msg = document.getElementById('signup-msg');
-  msg.style.color = 'var(--red)';
-  msg.textContent = '';
-
-  if(!slug || !name || !email || !password){ msg.textContent = 'All fields are required.'; return; }
-  if(password.length < 6){ msg.textContent = 'Password must be at least 6 characters.'; return; }
-
-  // 1. Find the company by slug (works while logged out, via SECURITY DEFINER function)
-  const { data: companies, error: cerr } = await sb.rpc('find_company_by_slug', { p_slug: slug });
-  const company = Array.isArray(companies) ? companies[0] : companies;
-  if(cerr){ msg.textContent = 'Lookup failed: '+cerr.message; return; }
-  if(!company){ msg.textContent = 'No company found with code "'+slug+'". Check the exact code your client gave you.'; return; }
-  if(company.status !== 'active'){ msg.textContent = 'That company account is currently suspended — contact them.'; return; }
-
-  // 2. Create the auth account (isolated client so it doesn't disturb any current session)
-  const { data: sdata, error: serr } = await scratchClient().auth.signUp({ email, password });
-  if(serr){ msg.textContent = serr.message; return; }
-  if(!sdata.user){ msg.textContent = 'Signup failed — please try again.'; return; }
-
-  // 3. Sign in as the new vendor so the claim runs under their identity
-  const { error: sierr } = await sb.auth.signInWithPassword({ email, password });
-  if(sierr){ msg.textContent = 'Account created. Please confirm your email if required, then sign in.'; return; }
-
-  // 4. Claim the pre-created vendor row (or create a fresh one) via SECURITY DEFINER function
-  const { error: claimErr } = await sb.rpc('claim_vendor_row', {
-    p_company_id: company.id, p_email: email, p_auth_user_id: sdata.user.id, p_name: name
-  });
-  if(claimErr){ msg.textContent = 'Linked account failed: '+claimErr.message; return; }
-
-  msg.style.color = 'var(--green)';
-  msg.textContent = 'Account created and linked to '+company.name+'. Loading…';
-  state.session = (await sb.auth.getSession()).data.session;
-  await resolveRole();
-}
-
-// ============================================================
-// SHARED SHELL
-// ============================================================
-function shell(title, roleLabel, bodyHtml){
-  return `
-  <header class="topbar">
-    <h1>Kiy<span class="mark">ra</span>${title?(' <span style="color:#7d8894;font-weight:400;">/ '+title+'</span>'):''}</h1>
-    <div style="display:flex;align-items:center;gap:14px;">
-      <span class="who">${roleLabel}</span>
-      <button class="btn btn-sm" onclick="signOut()">Sign out</button>
-    </div>
-  </header>
-  <div class="app">${bodyHtml}</div>`;
-}
-
-// ============================================================
-// SUPERADMIN VIEW
-// ============================================================
-async function renderSuperadmin(tab){
-  state.activeTab = tab || state.activeTab || 'companies';
-  const { data: companies } = await sb.from('companies').select('*').order('created_at', {ascending:false});
-
-  let body = `<div class="tabs">
-    <div class="tab ${state.activeTab==='companies'?'active':''}" onclick="renderSuperadmin('companies')">Companies</div>
-    <div class="tab ${state.activeTab==='activity'?'active':''}" onclick="renderSuperadmin('activity')">Global Activity</div>
-  </div>`;
-
-  if(state.activeTab === 'companies'){
-    const active = companies.filter(c=>c.status==='active').length;
-    const byPlan = {};
-    companies.forEach(c=>{ byPlan[c.plan||'trial'] = (byPlan[c.plan||'trial']||0)+1; });
-    const mrr = companies.filter(c=>c.status==='active').reduce((s,c)=>{
-      const price = ({basic:999, professional:2499, advanced:4999})[c.plan] || 0; return s+price;
-    },0);
-    body += `
-    <div class="eyebrow">Portfolio</div>
-    <div class="grid grid-4" style="margin-bottom:20px;">
-      <div class="kpi"><div class="kpi-accent"></div><div class="kpi-label">Companies</div><div class="kpi-value">${companies.length}</div><div class="kpi-sub">${active} active</div></div>
-      <div class="kpi"><div class="kpi-accent"></div><div class="kpi-label">Est. monthly revenue</div><div class="kpi-value">₹${mrr.toLocaleString('en-IN')}</div><div class="kpi-sub">from active paid plans</div></div>
-      <div class="kpi amber"><div class="kpi-accent"></div><div class="kpi-label">On trial</div><div class="kpi-value">${byPlan['trial']||0}</div><div class="kpi-sub">to convert</div></div>
-      <div class="kpi blue"><div class="kpi-accent"></div><div class="kpi-label">Paid plans</div><div class="kpi-value">${(byPlan['basic']||0)+(byPlan['professional']||0)+(byPlan['advanced']||0)}</div><div class="kpi-sub">Basic·Pro·Advanced</div></div>
-    </div>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;">Companies</h3>
-        <button class="btn btn-primary" onclick="openNewCompanyModal()">+ New company</button>
-      </div>
-      <table style="margin-top:14px;">
-        <tr><th>Name</th><th>Code</th><th>Plan</th><th>Approvals</th><th>Status</th><th></th></tr>
-        ${companies.map(c=>`
-          <tr>
-            <td style="font-weight:500;">${c.name}</td>
-            <td class="muted"><code>${c.slug}</code></td>
-            <td style="text-transform:capitalize;">${c.plan}</td>
-            <td>${c.approval_levels}</td>
-            <td>${badge(c.status)}</td>
-            <td class="row-actions">
-              <button class="btn btn-sm" onclick='openCompanyDetail(${JSON.stringify(c.id)})'>Manage</button>
-              <button class="btn btn-sm ${c.status==='active'?'btn-danger':'btn-green'}" onclick="toggleCompanyStatus('${c.id}','${c.status}')">${c.status==='active'?'Suspend':'Activate'}</button>
-            </td>
-          </tr>`).join('')}
-      </table>
-    </div>`;
-  } else {
-    const { data: log } = await sb.from('activity_log').select('*, companies(name)').order('created_at',{ascending:false}).limit(100);
-    body += `<div class="card"><h3 style="margin-top:0;">Recent activity (all companies)</h3>
-      <table><tr><th>When</th><th>Company</th><th>Actor</th><th>Action</th></tr>
-      ${(log||[]).map(l=>`<tr><td class="muted">${new Date(l.created_at).toLocaleString('en-IN')}</td><td>${l.companies?.name||''}</td><td>${l.actor_label||''}</td><td>${l.action}</td></tr>`).join('')}
-      </table></div>`;
-  }
-
-  document.getElementById('root').innerHTML = shell('Superadmin', `${state.profile.name || state.profile.email} · Superadmin`, body);
-}
-
-function openNewCompanyModal(){
-  showModal(`
-    <span class="close-x" onclick="closeModal()">✕</span>
-    <h3>New company</h3>
-    <label>Company name</label><input id="nc-name"/>
-    <label style="margin-top:8px;display:block;">Slug (used for vendor signup link)</label><input id="nc-slug" placeholder="e.g. abc-traders"/>
-    <label style="margin-top:8px;display:block;">GSTIN</label><input id="nc-gstin"/>
-    <label style="margin-top:8px;display:block;">Contact email</label><input id="nc-email"/>
-    <label style="margin-top:8px;display:block;">Approval levels</label><input id="nc-levels" type="number" value="1" min="1" max="5"/>
-    <hr style="margin:14px 0;border-color:var(--border);">
-    <p class="muted">First company admin (they'll receive login credentials):</p>
-    <label>Admin email</label><input id="nc-admin-email"/>
-    <label style="margin-top:8px;display:block;">Admin temp password (min 6 characters)</label><input id="nc-admin-pass" type="text" placeholder="Set a temp password"/>
-    <button class="btn btn-primary" style="width:100%;margin-top:16px;" id="nc-submit-btn" onclick="createCompany()">Create company</button>
-    <p style="margin-top:8px;font-size:13px;" id="nc-msg"></p>
-  `);
-}
-async function createCompany(){
-  const name = document.getElementById('nc-name').value.trim();
-  const slug = document.getElementById('nc-slug').value.trim();
-  const gstin = document.getElementById('nc-gstin').value.trim();
-  const contact_email = document.getElementById('nc-email').value.trim();
-  const approval_levels = parseInt(document.getElementById('nc-levels').value) || 1;
-  const adminEmail = document.getElementById('nc-admin-email').value.trim();
-  const adminPass = document.getElementById('nc-admin-pass').value;
-  const msg = document.getElementById('nc-msg');
-  const btn = document.getElementById('nc-submit-btn');
-
-  msg.style.color = 'var(--red)';
-  msg.textContent = '';
-
-  if(!name || !slug){ msg.textContent = 'Company name and slug are required.'; return; }
-  if(adminEmail && adminPass && adminPass.length < 6){ msg.textContent = 'Admin password must be at least 6 characters (Supabase minimum).'; return; }
-  if(adminPass && !adminEmail){ msg.textContent = 'Admin email is required if you set a password.'; return; }
-
-  btn.disabled = true;
-  btn.textContent = 'Creating…';
-
-  try{
-    const { data: company, error } = await sb.from('companies').insert({name, slug, gstin, contact_email, approval_levels}).select().single();
-    if(error){
-      msg.textContent = error.code === '23505' ? `That slug is already taken — pick a different one.` : error.message;
-      return;
-    }
-
-    if(adminEmail && adminPass){
-      // Use an isolated client so this signUp doesn't disturb our current (superadmin) session.
-      const { data: sdata, error: serr } = await scratchClient().auth.signUp({ email: adminEmail, password: adminPass });
-      if(serr){ msg.textContent = 'Company created, but admin account failed: '+serr.message+' — you can add the admin later from the company detail view.'; return; }
-      const { error: cuErr } = await sb.from('company_users').insert({
-        company_id: company.id, auth_user_id: sdata.user.id, email: adminEmail, role:'company_admin', name: adminEmail
-      });
-      if(cuErr){ msg.textContent = 'Company created, but linking the admin failed: '+cuErr.message; return; }
-    }
-    await logActivity(company.id, 'created_company', 'company', company.id, {name});
-    closeModal();
-    toast('Company created');
-    renderSuperadmin('companies');
-  } catch(e){
-    msg.textContent = 'Unexpected error: ' + (e.message || e);
-  } finally {
-    if(btn){ btn.disabled = false; btn.textContent = 'Create company'; }
-  }
-}
-async function toggleCompanyStatus(id, current){
-  const next = current==='active' ? 'suspended' : 'active';
-  await sb.from('companies').update({status: next}).eq('id', id);
-  toast(`Company ${next}`);
-  renderSuperadmin('companies');
-}
-async function openCompanyDetail(id){
-  const { data: c } = await sb.from('companies').select('*').eq('id',id).single();
-  const { data: users } = await sb.from('company_users').select('*').eq('company_id', id);
-  const { data: vendors } = await sb.from('vendors').select('*').eq('company_id', id);
-  const { data: pos } = await sb.from('purchase_orders').select('id').eq('company_id', id);
-  const { data: invs } = await sb.from('invoices').select('id,status').eq('company_id', id);
-  showModal(`
-    <span class="close-x" onclick="closeModal()">✕</span>
-    <h3>${c.name}</h3>
-    <p class="muted">${c.slug} · ${c.gstin||'no GSTIN on file'}</p>
-    <div class="grid grid-3">
-      <div class="card"><div class="stat">${users.length}</div><div class="muted">Staff users</div></div>
-      <div class="card"><div class="stat">${vendors.length}</div><div class="muted">Vendors</div></div>
-      <div class="card"><div class="stat">${pos.length}</div><div class="muted">POs</div></div>
-    </div>
-    <p class="muted" style="margin-top:10px;">Invoices: ${(invs||[]).length} total ·
-      ${(invs||[]).filter(i=>i.status==='approved').length} approved ·
-      ${(invs||[]).filter(i=>['submitted','under_review'].includes(i.status)).length} pending</p>
-    <label style="margin-top:10px;display:block;">Plan</label>
-    <select id="cd-plan">
-      ${['trial','basic','professional','advanced'].map(p=>`<option value="${p}" ${c.plan===p?'selected':''}>${p.charAt(0).toUpperCase()+p.slice(1)}</option>`).join('')}
-    </select>
-    <label style="margin-top:8px;display:block;">Approval levels (invoices, and POs if PO approval is on)</label>
-    <input id="cd-levels" type="number" value="${c.approval_levels}" min="1" max="5"/>
-    <label style="margin-top:8px;display:block;">Annual budget (optional)</label>
-    <input id="cd-budget" type="number" value="${c.annual_budget||''}"/>
-    <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="updateApprovalLevels('${id}')">Save</button>
-  `);
-}
-async function updateApprovalLevels(id){
-  const v = parseInt(document.getElementById('cd-levels').value)||1;
-  const budget = document.getElementById('cd-budget').value ? parseFloat(document.getElementById('cd-budget').value) : null;
-  const plan = document.getElementById('cd-plan').value;
-  await sb.from('companies').update({approval_levels:v, annual_budget: budget, plan}).eq('id',id);
-  toast('Updated');
-  closeModal();
-  renderSuperadmin('companies');
-}
-
-// ============================================================
-// COMPANY APP (admin / approver / staff)
-// ============================================================
-async function renderCompanyApp(tab){
-  state.activeTab = tab || state.activeTab || 'dashboard';
-  const cid = state.company.id;
-  const isAdmin = state.role === 'company_admin';
-
-  let tabs = [['dashboard','Dashboard'],['pos','Purchase Orders'],['invoices','Invoices / Approvals'],['vendors','Vendors']];
-  if(isAdmin) tabs.push(['users','Team']);
-  if(isAdmin) tabs.push(['settings','Settings']);
-
-  let body = `<div class="tabs">${tabs.map(([k,l])=>`<div class="tab ${state.activeTab===k?'active':''}" onclick="renderCompanyApp('${k}')">${l}</div>`).join('')}</div>`;
-
-  if(state.activeTab === 'dashboard'){
-    const { data: pos } = await sb.from('purchase_orders').select('id,status,total_amount,created_at,vendor_id,vendors(name)').eq('company_id',cid);
-    const { data: invs } = await sb.from('invoices').select('id,status,total_amount,submitted_at,vendor_id').eq('company_id',cid);
-    const { data: vendors } = await sb.from('vendors').select('id,name,status').eq('company_id',cid);
-    const p = state.plan || {};
-    const uCount = await countRows('company_users');
-
-    const poList = pos||[], invList = invs||[], vList = vendors||[];
-    const pending = invList.filter(i=>['submitted','under_review'].includes(i.status));
-    const approvedInv = invList.filter(i=>i.status==='approved' || i.status==='paid');
-    const paidInv = invList.filter(i=>i.status==='paid');
-    const approvedValue = approvedInv.reduce((s,i)=>s+Number(i.total_amount),0);
-    const paidValue = paidInv.reduce((s,i)=>s+Number(i.total_amount),0);
-    const poValue = poList.reduce((s,i)=>s+Number(i.total_amount),0);
-    const activeVendors = vList.filter(v=>v.status==='active').length;
-    const pendingVendors = vList.filter(v=>v.status==='pending').length;
-
-    // ---- monthly PO trend (last 6 months) ----
-    const months = [];
-    const now = new Date();
-    for(let k=5;k>=0;k--){
-      const d = new Date(now.getFullYear(), now.getMonth()-k, 1);
-      months.push({ key:`${d.getFullYear()}-${d.getMonth()}`, label:d.toLocaleDateString('en-IN',{month:'short'}), value:0, count:0 });
-    }
-    poList.forEach(po=>{
-      const d = new Date(po.created_at);
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
-      const m = months.find(x=>x.key===key);
-      if(m){ m.value += Number(po.total_amount); m.count++; }
-    });
-    const maxMonth = Math.max(1, ...months.map(m=>m.value));
-    const barChart = `<div class="barchart">${months.map(m=>`
-      <div class="bar-col">
-        <div class="bar-val">${m.value>0?('₹'+Math.round(m.value/1000)+'k'):''}</div>
-        <div class="bar" style="height:${(m.value/maxMonth*100)}%" title="${fmtMoney(m.value)} · ${m.count} PO(s)"></div>
-        <div class="bar-label">${m.label}</div>
-      </div>`).join('')}</div>`;
-
-    // ---- top vendors by PO value ----
-    const vendorSpend = {};
-    poList.forEach(po=>{
-      const name = po.vendors?.name || 'Unknown';
-      vendorSpend[name] = (vendorSpend[name]||0) + Number(po.total_amount);
-    });
-    const topVendors = Object.entries(vendorSpend).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    const maxVendor = Math.max(1, ...topVendors.map(v=>v[1]));
-    const topVendorsHtml = topVendors.length ? topVendors.map(([name,val])=>`
-      <div style="margin-bottom:11px;">
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
-          <span style="font-weight:500;">${name}</span><span style="font-variant-numeric:tabular-nums;color:var(--ink-soft);">${fmtMoney(val)}</span>
-        </div>
-        <div style="height:7px;background:#eceee9;border-radius:4px;overflow:hidden;">
-          <div style="height:100%;width:${(val/maxVendor*100)}%;background:linear-gradient(90deg,#159e83,#0f6f5c);border-radius:4px;"></div>
-        </div>
-      </div>`).join('') : '<p class="muted">No purchase orders yet.</p>';
-
-    // ---- invoice status donut (CSS conic) ----
-    const statusColors = { submitted:'#b8893a', under_review:'#b8893a', approved:'#0f6f5c', paid:'#3b5b9b', rejected:'#b23b3b' };
-    const statusCounts = {};
-    invList.forEach(i=>{ statusCounts[i.status] = (statusCounts[i.status]||0)+1; });
-    const totalInv = invList.length || 1;
-    let acc = 0;
-    const segments = Object.entries(statusCounts).map(([st,ct])=>{
-      const start = acc/totalInv*360; acc += ct; const end = acc/totalInv*360;
-      return `${statusColors[st]||'#ccc'} ${start}deg ${end}deg`;
-    }).join(', ');
-    const donut = invList.length ? `
-      <div style="display:flex;gap:20px;align-items:center;">
-        <div style="width:120px;height:120px;border-radius:50%;background:conic-gradient(${segments});flex-shrink:0;position:relative;">
-          <div style="position:absolute;inset:22px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;">
-            <span style="font-family:'Fraunces',serif;font-weight:700;font-size:22px;">${invList.length}</span>
-            <span style="font-size:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;">Invoices</span>
-          </div>
-        </div>
-        <div style="flex:1;">
-          ${Object.entries(statusCounts).map(([st,ct])=>`
-            <div class="legend-row"><span class="legend-dot" style="background:${statusColors[st]||'#ccc'}"></span>
-            <span style="flex:1;text-transform:capitalize;">${st.replace('_',' ')}</span>
-            <span style="font-weight:600;font-variant-numeric:tabular-nums;">${ct}</span></div>`).join('')}
-        </div>
-      </div>` : '<p class="muted">No invoices submitted yet.</p>';
-
-    // ---- match health ----
-    const { data: invForMatch } = await sb.from('invoices').select('*, purchase_orders(*)').eq('company_id',cid);
-    let matched=0, partial=0, unmatched=0;
-    (invForMatch||[]).forEach(i=>{
-      const m = matchInvoiceToPO(i, i.purchase_orders);
-      if(m.status==='matched') matched++; else if(m.status==='partial') partial++; else unmatched++;
-    });
-
-    const cap = (used, max) => max === null || max === undefined ? `${used} / ∞` : `${used} / ${max}`;
-
-    body += `
-    <div class="eyebrow">Overview</div>
-    <div class="grid grid-4" style="margin-bottom:20px;">
-      <div class="kpi"><div class="kpi-accent"></div><div class="kpi-label">Total PO value</div><div class="kpi-value">${fmtMoney(poValue)}</div><div class="kpi-sub">${poList.length} purchase order(s)</div></div>
-      <div class="kpi amber"><div class="kpi-accent"></div><div class="kpi-label">Pending approval</div><div class="kpi-value">${pending.length}</div><div class="kpi-sub">${fmtMoney(pending.reduce((s,i)=>s+Number(i.total_amount),0))} awaiting</div></div>
-      <div class="kpi"><div class="kpi-accent"></div><div class="kpi-label">Approved invoices</div><div class="kpi-value">${fmtMoney(approvedValue)}</div><div class="kpi-sub">${approvedInv.length} approved</div></div>
-      <div class="kpi blue"><div class="kpi-accent"></div><div class="kpi-label">Paid</div><div class="kpi-value">${fmtMoney(paidValue)}</div><div class="kpi-sub">${paidInv.length} settled</div></div>
-    </div>
-
-    <div class="grid grid-2">
-      <div class="card">
-        <h3 style="margin-top:0;">Purchase orders — last 6 months</h3>
-        ${barChart}
-      </div>
-      <div class="card">
-        <h3 style="margin-top:0;">Invoice status</h3>
-        ${donut}
-      </div>
-    </div>
-
-    <div class="grid grid-2">
-      <div class="card">
-        <h3 style="margin-top:0;">Top vendors by value</h3>
-        ${topVendorsHtml}
-      </div>
-      <div class="card">
-        <h3 style="margin-top:0;">Invoice–PO match health</h3>
-        <div class="grid grid-3" style="gap:10px;margin-bottom:14px;">
-          <div style="text-align:center;padding:12px;background:#e2efea;border-radius:10px;"><div class="stat" style="color:#0f6f5c;">${matched}</div><div class="muted" style="font-size:11px;">Matched</div></div>
-          <div style="text-align:center;padding:12px;background:#f7efe0;border-radius:10px;"><div class="stat" style="color:#8a6420;">${partial}</div><div class="muted" style="font-size:11px;">Partial</div></div>
-          <div style="text-align:center;padding:12px;background:#f8eded;border-radius:10px;"><div class="stat" style="color:#b23b3b;">${unmatched}</div><div class="muted" style="font-size:11px;">Unmatched</div></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;padding-top:10px;border-top:1px solid var(--border);">
-          <span class="muted">Active vendors</span><strong>${activeVendors}${pendingVendors?` <span class="muted">(+${pendingVendors} pending)</span>`:''}</strong>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;">Plan · ${(state.company.plan||'trial').replace(/^./,c=>c.toUpperCase())}</h3>
-        ${p.price_monthly ? `<span class="muted">₹${p.price_monthly}/mo + GST</span>` : '<span class="badge badge-submitted">Trial</span>'}
-      </div>
-      <div class="grid grid-3" style="margin-top:14px;">
-        <div><div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Team users</div><strong style="font-size:17px;font-variant-numeric:tabular-nums;">${cap(uCount, p.max_users)}</strong></div>
-        <div><div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Vendors</div><strong style="font-size:17px;font-variant-numeric:tabular-nums;">${cap(vList.length, p.max_vendors)}</strong></div>
-        <div><div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Docs this month</div><strong style="font-size:17px;font-variant-numeric:tabular-nums;">${cap(await docsThisMonth(), p.max_docs_per_month)}</strong></div>
-      </div>
-    </div>`;
-  }
-
-  else if(state.activeTab === 'pos'){
-    const { data: pos, error: posErr } = await sb.from('purchase_orders').select('*, vendors(name)').eq('company_id',cid).order('created_at',{ascending:false});
-    const yearSpent = (pos||[]).filter(p=>['sent','acknowledged','closed'].includes(p.status)).reduce((s,p)=>s+Number(p.total_amount),0);
-    const budgetLine = state.company.annual_budget ? `<p class="muted">Committed spend: ${fmtMoney(yearSpent)} of ${fmtMoney(state.company.annual_budget)} budget${yearSpent > state.company.annual_budget ? ' <span class="badge badge-rejected">over budget</span>' : ''}</p>` : '';
-    body += `<div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;">Purchase Orders</h3>
-        <button class="btn btn-primary" onclick="openNewPOModal()">+ New PO</button>
-      </div>
-      ${budgetLine}
-      ${posErr ? `<p style="color:var(--red);">Couldn't load purchase orders: ${posErr.message}</p>` : ''}
-      <table style="margin-top:12px;">
-        <tr><th>PO #</th><th>Vendor</th><th>Amount</th><th>Status</th><th>Created</th><th></th></tr>
-        ${(pos||[]).map(p=>`<tr>
-          <td>${p.po_number}</td><td>${p.vendors?.name||''}</td><td>${fmtMoney(p.total_amount)}</td>
-          <td>${badge(p.status)}</td><td class="muted">${fmtDate(p.created_at)}</td>
-          <td class="row-actions">
-            <button class="btn btn-sm" onclick="printPO('${p.id}')">Print / PDF</button>
-            <button class="btn btn-sm" onclick="emailPO('${p.id}')">Email</button>
-            ${p.status==='pending_approval' ? `<button class="btn btn-sm" onclick='openPOApprovalModal(${JSON.stringify(p.id)})'>Review</button>` : ''}
-            ${p.status==='draft' && !state.company.po_requires_approval ? `<button class="btn btn-sm btn-green" onclick="sendPO('${p.id}')">Send to vendor</button>`:''}
-            ${p.status==='approved' ? `<button class="btn btn-sm btn-green" onclick="sendPO('${p.id}')">Send to vendor</button>`:''}
-          </td>
-        </tr>`).join('') || `<tr><td colspan="6" class="muted">${posErr ? '' : 'No purchase orders yet — click "+ New PO" to create one.'}</td></tr>`}
-      </table>
-    </div>`;
-  }
-
-  else if(state.activeTab === 'invoices'){
-    const { data: invs, error: invErr } = await sb.from('invoices').select('*, vendors(name), purchase_orders(*)').eq('company_id',cid).order('submitted_at',{ascending:false});
-    window.__invoicesForExport = invs || [];
-    body += `<div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;">Invoices</h3>
-        <button class="btn btn-sm" onclick="exportInvoicesCSV()">Export CSV</button>
-      </div>
-      ${invErr ? `<p style="color:var(--red);">Couldn't load invoices: ${invErr.message}</p>` : ''}
-      <table>
-        <tr><th>Invoice #</th><th>Vendor</th><th>PO</th><th>Amount</th><th>PO Match</th><th>Status</th><th>Submitted</th><th></th></tr>
-        ${(invs||[]).map(i=>{
-          const m = matchInvoiceToPO(i, i.purchase_orders);
-          return `<tr>
-          <td>${i.invoice_number}</td><td>${i.vendors?.name||''}</td><td>${i.purchase_orders?.po_number||'—'}</td>
-          <td>${fmtMoney(i.total_amount)}</td>
-          <td>${matchBadge(m.status)}</td>
-          <td>${badge(i.status)}${i.status==='paid'&&i.payment_reference?`<div class="muted">Ref: ${i.payment_reference}</div>`:''}</td><td class="muted">${fmtDate(i.submitted_at)}</td>
-          <td class="row-actions">
-            <button class="btn btn-sm" onclick='openInvoiceModal(${JSON.stringify(i.id)})'>Review</button>
-            ${isAdmin && i.status==='approved' ? `<button class="btn btn-sm btn-green" onclick='markInvoicePaid(${JSON.stringify(i.id)})'>Mark paid</button>` : ''}
-          </td>
-        </tr>`;}).join('') || `<tr><td colspan="8" class="muted">${invErr ? '' : 'No invoices submitted yet.'}</td></tr>`}
-      </table>
-    </div>`;
-  }
-
-  else if(state.activeTab === 'vendors'){
-    const { data: vendors, error: vendErr } = await sb.from('vendors').select('*').eq('company_id',cid).order('created_at',{ascending:false});
-    body += `<div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;">Vendors</h3>
-        <button class="btn btn-primary" onclick="openNewVendorModal()">+ Add vendor</button>
-      </div>
-      <div style="background:#f0f6ff;border:1px solid #cfe0ff;border-radius:8px;padding:10px;margin:8px 0;font-size:13px;">
-        <strong>Vendor self-signup code:</strong> <code style="font-size:14px;background:#fff;padding:2px 8px;border-radius:4px;">${state.company.slug}</code>
-        <div class="muted" style="margin-top:4px;">Share this code with your vendors. They open the app → "Vendor sign up" tab → enter this exact code, their business name, email and a password. They'll appear here as "pending" for you to activate. Tip: if you add a vendor below with their email first, their signup automatically links to that row instead of creating a duplicate.</div>
-      </div>
-      ${vendErr ? `<p style="color:var(--red);">Couldn't load vendors: ${vendErr.message}</p>` : ''}
-      <table>
-        <tr><th>Name</th><th>Email</th><th>GSTIN</th><th>Status</th><th></th></tr>
-        ${(vendors||[]).map(v=>`<tr>
-          <td>${v.name}</td><td>${v.email}</td><td class="muted">${v.gstin||'-'}</td><td>${badge(v.status)}</td>
-          <td class="row-actions">
-            <button class="btn btn-sm" onclick='openVendorDetail(${JSON.stringify(v.id)})'>View</button>
-            ${v.status==='pending'?`<button class="btn btn-sm btn-green" onclick="setVendorStatus('${v.id}','active')">Activate</button>`:''}
-            ${v.status==='active'?`<button class="btn btn-sm btn-danger" onclick="setVendorStatus('${v.id}','disabled')">Disable</button>`:''}
-          </td>
-        </tr>`).join('') || `<tr><td colspan="5" class="muted">${vendErr ? '' : 'No vendors yet — click "+ Add vendor".'}</td></tr>`}
-      </table>
-    </div>`;
-  }
-
-  else if(state.activeTab === 'users' && isAdmin){
-    const { data: users } = await sb.from('company_users').select('*').eq('company_id',cid);
-    body += `<div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;">Team</h3>
-        <button class="btn btn-primary" onclick="openNewUserModal()">+ Add team member</button>
-      </div>
-      <table><tr><th>Name</th><th>Email</th><th>Role</th><th>Approval level</th><th>Status</th></tr>
-      ${(users||[]).map(u=>`<tr><td>${u.name||''}</td><td>${u.email}</td><td>${u.role}</td><td>${u.approval_level||'-'}</td><td>${badge(u.status)}</td></tr>`).join('')}
-      </table>
-    </div>`;
-  }
-
-  else if(state.activeTab === 'settings' && isAdmin){
-    const c = state.company;
-    body += `<div class="card">
-      <h3 style="margin-top:0;">Company settings</h3>
-      <div class="grid grid-2">
-        <div>
-          <label>PO number prefix</label><input id="set-prefix" value="${c.po_number_prefix||'PO'}"/>
-        </div>
-        <div>
-          <label>Currency</label><input id="set-currency" value="${c.currency||'INR'}"/>
-        </div>
-        <div>
-          <label>Annual budget (optional, soft cap)</label><input id="set-budget" type="number" value="${c.annual_budget||''}"/>
-        </div>
-        <div>
-          <label>Company GSTIN</label><input id="set-gstin" value="${c.gstin||''}" placeholder="e.g. 27ABCDE1234F1Z5"/>
-        </div>
-        <div>
-          <label style="display:block;margin-bottom:4px;">Require approval before sending a PO to vendor</label>
-          <select id="set-po-approval"><option value="false" ${!c.po_requires_approval?'selected':''}>No</option><option value="true" ${c.po_requires_approval?'selected':''}>Yes</option></select>
-        </div>
-      </div>
-      <p class="muted">Your GSTIN's state code is compared against each vendor's GSTIN to auto-determine CGST+SGST (same state) vs IGST (different state) on new POs.</p>
-      <p class="muted">Approval levels for invoices${c.po_requires_approval?' and POs':''} (${c.approval_levels}) are set by your superadmin.</p>
-      <button class="btn btn-primary" style="margin-top:12px;" onclick="saveCompanySettings()">Save settings</button>
-      <p class="muted" id="set-msg"></p>
-    </div>
-    <div class="card">
-      <h3 style="margin-top:0;">Letterhead & legal details (printed on PO PDF)</h3>
-      <div class="grid grid-2">
-        <div><label>Office address</label><textarea id="set-address" rows="2">${c.address||''}</textarea></div>
-        <div><label>Registered office</label><textarea id="set-regoffice" rows="2">${c.registered_office||''}</textarea></div>
-        <div><label>PAN</label><input id="set-pan" value="${c.pan||''}"/></div>
-        <div><label>CIN</label><input id="set-cin" value="${c.cin||''}"/></div>
-        <div><label>State</label><input id="set-state" value="${c.state||''}"/></div>
-        <div><label>State code</label><input id="set-statecode" value="${c.state_code||''}"/></div>
-        <div><label>Phone</label><input id="set-phone" value="${c.contact_phone||''}"/></div>
-        <div><label>Fax</label><input id="set-fax" value="${c.fax||''}"/></div>
-        <div><label>Website</label><input id="set-website" value="${c.website||''}"/></div>
-        <div><label>Authorised signatory name</label><input id="set-signatory" value="${c.authorised_signatory||''}"/></div>
-      </div>
-      <label style="margin-top:10px;display:block;">Payment terms (printed on PO)</label>
-      <textarea id="set-payterms" rows="2">${c.po_payment_terms||''}</textarea>
-      <label style="margin-top:10px;display:block;">General conditions / T&amp;C annexure (leave blank to use the built-in standard template)</label>
-      <textarea id="set-terms" rows="5" placeholder="Leave blank to use the built-in standard commercial terms, or paste your own legal-approved terms here.">${c.po_terms||''}</textarea>
-      <p class="muted">The built-in template is a generic set of standard purchase conditions — have your legal team review or replace it before using live.</p>
-      <button class="btn btn-primary" style="margin-top:10px;" onclick="saveLetterhead()">Save letterhead & terms</button>
-      <p class="muted" id="set-lh-msg"></p>
-    </div>
-    <div class="card">
-      <h3 style="margin-top:0;">PO item templates</h3>
-      <p class="muted">Saved templates speed up recurring POs to the same vendor.</p>
-      <div id="templates-list">Loading…</div>
-    </div>`;
-  }
-
-  document.getElementById('root').innerHTML = shell(state.company.name, `${state.profile.name || state.profile.email} · ${state.role.replace('_',' ')}`, body);
-  if(state.activeTab === 'settings' && isAdmin) loadTemplatesList();
-}
-
-async function saveCompanySettings(){
-  const msg = document.getElementById('set-msg');
-  const po_number_prefix = document.getElementById('set-prefix').value.trim() || 'PO';
-  const currency = document.getElementById('set-currency').value.trim() || 'INR';
-  const annual_budget = document.getElementById('set-budget').value ? parseFloat(document.getElementById('set-budget').value) : null;
-  const po_requires_approval = document.getElementById('set-po-approval').value === 'true';
-  const gstin = document.getElementById('set-gstin').value.trim().toUpperCase();
-  if(gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z][Z][0-9A-Z]$/.test(gstin)){
-    msg.textContent = 'That GSTIN doesn\'t match the standard 15-character format (e.g. 27ABCDE1234F1Z5).';
-    return;
-  }
-  const { error } = await sb.from('companies').update({po_number_prefix, currency, annual_budget, po_requires_approval, gstin}).eq('id', state.company.id);
-  if(error){ msg.textContent = error.message; return; }
-  state.company = {...state.company, po_number_prefix, currency, annual_budget, po_requires_approval, gstin};
-  toast('Settings saved');
-}
-async function saveLetterhead(){
-  const msg = document.getElementById('set-lh-msg');
-  const patch = {
-    address: document.getElementById('set-address').value.trim() || null,
-    registered_office: document.getElementById('set-regoffice').value.trim() || null,
-    pan: document.getElementById('set-pan').value.trim().toUpperCase() || null,
-    cin: document.getElementById('set-cin').value.trim().toUpperCase() || null,
-    state: document.getElementById('set-state').value.trim() || null,
-    state_code: document.getElementById('set-statecode').value.trim() || null,
-    contact_phone: document.getElementById('set-phone').value.trim() || null,
-    fax: document.getElementById('set-fax').value.trim() || null,
-    website: document.getElementById('set-website').value.trim() || null,
-    authorised_signatory: document.getElementById('set-signatory').value.trim() || null,
-    po_payment_terms: document.getElementById('set-payterms').value.trim() || null,
-    po_terms: document.getElementById('set-terms').value.trim() || null
-  };
-  const { error } = await sb.from('companies').update(patch).eq('id', state.company.id);
-  if(error){ msg.style.color='var(--red)'; msg.textContent = error.message; return; }
-  state.company = {...state.company, ...patch};
-  toast('Letterhead & terms saved');
-}
-async function loadTemplatesList(){
-  const { data: templates } = await sb.from('po_templates').select('*, vendors(name)').eq('company_id', state.company.id).order('created_at',{ascending:false});
-  document.getElementById('templates-list').innerHTML = (templates||[]).length ? `
-    <table><tr><th>Name</th><th>Vendor</th><th>Items</th><th></th></tr>
-    ${templates.map(t=>`<tr><td>${t.name}</td><td>${t.vendors?.name||'-'}</td><td class="muted">${(t.items||[]).length} item(s)</td>
-      <td><button class="btn btn-sm btn-danger" onclick="deleteTemplate('${t.id}')">Delete</button></td></tr>`).join('')}
-    </table>` : '<p class="muted">No templates saved yet — save one from the "New PO" form.</p>';
-}
-async function deleteTemplate(id){
-  await sb.from('po_templates').delete().eq('id', id);
-  toast('Template deleted');
-  loadTemplatesList();
-}
-
-// ---- PO approval workflow ----
-async function openPOApprovalModal(id){
-  const { data: po } = await sb.from('purchase_orders').select('*, vendors(name)').eq('id',id).single();
-  const { data: history } = await sb.from('po_approvals').select('*, company_users(name,email)').eq('po_id', id).order('acted_at');
-  const levels = state.company.approval_levels || 1;
-  const canApprove = state.role === 'company_admin' || (state.role==='approver' && state.profile.approval_level === po.current_approval_level);
-  showModal(`
-    <span class="close-x" onclick="closeModal()">✕</span>
-    <h3>PO ${po.po_number}</h3>
-    <p class="muted">Vendor: ${po.vendors?.name}</p>
-    <p>Amount: <strong>${fmtMoney(po.total_amount)}</strong> · Approval level ${po.current_approval_level} of ${levels}</p>
-    <div style="margin-top:10px;">${(history||[]).length ? history.map(h=>`<p class="muted">${badge(h.action)} by ${h.company_users?.name||h.company_users?.email} on ${fmtDate(h.acted_at)} ${h.comments?('— '+h.comments):''}</p>`).join('') : '<p class="muted">No actions yet.</p>'}</div>
-    ${canApprove ? `
-      <label style="margin-top:10px;display:block;">Comments</label>
-      <textarea id="po-appr-comments" rows="2"></textarea>
-      <div style="display:flex;gap:8px;margin-top:10px;">
-        <button class="btn btn-green" style="flex:1;" onclick="actOnPO('${id}','approved')">Approve</button>
-        <button class="btn btn-danger" style="flex:1;" onclick="actOnPO('${id}','rejected')">Reject</button>
-      </div>
-    ` : '<p class="muted">Waiting on a different approval level.</p>'}
-  `);
-}
-async function actOnPO(id, action){
-  const comments = document.getElementById('po-appr-comments').value;
-  const { data: po } = await sb.from('purchase_orders').select('*').eq('id', id).single();
-  const levels = state.company.approval_levels || 1;
-  await sb.from('po_approvals').insert({ po_id: id, approver_id: state.profile.id, level: po.current_approval_level, action, comments });
-  if(action === 'rejected'){
-    await sb.from('purchase_orders').update({status:'rejected'}).eq('id', id);
-  } else {
-    if(po.current_approval_level >= levels){
-      await sb.from('purchase_orders').update({status:'approved'}).eq('id', id);
-    } else {
-      await sb.from('purchase_orders').update({status:'pending_approval', current_approval_level: po.current_approval_level+1}).eq('id', id);
-    }
-  }
-  await logActivity(state.company.id, `po_${action}`, 'purchase_order', id, {comments});
-  closeModal(); toast('Recorded'); renderCompanyApp('pos');
-}
-
-// ---- Mark invoice paid ----
-async function markInvoicePaid(id){
-  const ref = prompt('Payment reference (UTR / cheque no.) — optional:') || null;
-  await sb.from('invoices').update({status:'paid', payment_reference: ref, paid_at: new Date().toISOString()}).eq('id', id);
-  await logActivity(state.company.id, 'invoice_paid', 'invoice', id, {ref});
-  toast('Marked as paid'); renderCompanyApp('invoices');
-}
-
-// ---- CSV export ----
-function exportInvoicesCSV(){
-  const rows = window.__invoicesForExport || [];
-  const header = ['Invoice #','Vendor','PO','Amount','Tax','Total','Status','Submitted','Payment Ref'];
-  const lines = [header.join(',')];
-  rows.forEach(i=>{
-    lines.push([i.invoice_number, i.vendors?.name||'', i.purchase_orders?.po_number||'', i.amount, i.tax_amount, i.total_amount, i.status, i.submitted_at, i.payment_reference||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
-  });
-  const blob = new Blob([lines.join('\n')], {type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `invoices_${state.company.slug}.csv`; a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ---- PO creation ----
-// ---- GST: CGST+SGST (intrastate) vs IGST (interstate) ----
-// Determined by comparing the first 2 digits (state code) of the company's GSTIN
-// and the selected vendor's GSTIN. If either is missing, we can't determine this
-// and fall back to showing GST as a single combined figure.
-function gstStateCode(gstin){
-  return (gstin && gstin.length >= 2) ? gstin.slice(0,2) : null;
-}
-function currentPOTaxSplit(){
-  const vendorSelect = document.getElementById('po-vendor');
-  const opt = vendorSelect?.options[vendorSelect.selectedIndex];
-  const vendorGstin = opt?.dataset?.gstin || '';
-  const companyGstin = state.company.gstin || '';
-  const cCode = gstStateCode(companyGstin);
-  const vCode = gstStateCode(vendorGstin);
-  if(!cCode || !vCode) return 'unknown';
-  return cCode === vCode ? 'intrastate' : 'interstate';
-}
-
-
-// Chapter-level HSN and common SAC prefixes mapped to the typical GST rate.
-// This is an indicative lookup only — many HSN codes have exceptions/notifications
-// that override the chapter default, so the rate is always editable after lookup.
-const HSN_GST_SPECIFIC = {
-  // Specific SAC/HSN codes whose GST rate differs from their chapter/heading default.
-  // Extend this list as you encounter codes that auto-fill wrongly.
-  // --- Services (SAC) commonly at 5% or 12% ---
-  '996511':5,  // road transport of goods (GTA) — 5% (without ITC) common case
-  '996512':5,  // railway transport of goods
-  '996531':5,  // air transport of goods
-  '996812':5,  // courier (some cases)
-  '996601':18, // rental of road vehicles
-  '9963':5,    // restaurant/food service — commonly 5% (non-AC/standalone); override heading 18
-  '996331':5,  // services provided by restaurants
-  '996332':18, // services by hotels with room tariff (varies)
-  '998714':18, // maintenance & repair of vehicles
-  // --- Goods (HSN) with specific rates ---
-  '040110':5,'040120':5, // milk
-  '100630':5,  // rice (branded/packaged)
-  '090111':5,  // coffee
-  '090240':5,  // tea
-  '170199':5,  // sugar
-  '300490':12, // medicaments
-  '481910':12, // cartons/boxes
-  '621520':12  // ties/apparel accessories
-};
-const HSN_GST_TABLE = {
-  // ---- Goods: 2-digit HSN chapter defaults ----
-  '01':0,'02':0,'03':0,'04':5,'05':5,'06':5,'07':0,'08':0,'09':5,'10':0,'11':5,'12':5,'13':18,'14':5,
-  '15':5,'16':12,'17':5,'18':18,'19':18,'20':12,'21':18,'22':18,'23':5,'24':28,'25':5,'26':5,'27':18,
-  '28':18,'29':18,'30':12,'31':5,'32':18,'33':18,'34':18,'35':18,'36':18,'37':18,'38':18,'39':18,'40':18,
-  '41':5,'42':18,'43':18,'44':12,'45':18,'46':12,'47':12,'48':18,'49':12,'50':5,'51':5,'52':5,'53':5,
-  '54':12,'55':12,'56':12,'57':12,'58':12,'59':12,'60':12,'61':12,'62':12,'63':12,'64':18,'65':18,'66':12,
-  '67':18,'68':18,'69':18,'70':18,'71':3,'72':18,'73':18,'74':18,'75':18,'76':18,'78':18,'79':18,'80':18,
-  '81':18,'82':18,'83':18,'84':18,'85':18,'86':18,'87':28,'88':5,'89':5,'90':18,'91':18,'92':18,'93':18,
-  '94':18,'95':12,'96':18,'97':12,
-  // ---- Services: 4-digit SAC heading defaults ----
-  '9954':18, // construction services
-  '9961':18,'9962':18, // trade services
-  '9963':18, // accommodation, food & beverage (many 12/18 splits — default 18)
-  '9964':18, // passenger transport
-  '9965':18, // goods transport
-  '9966':18, // rental of transport vehicles
-  '9967':18, // supporting transport services
-  '9968':18, // postal & courier
-  '9969':18, // electricity/gas/water distribution
-  '9971':18, // financial & related services
-  '9972':18, // real estate services
-  '9973':18, // leasing/rental (non-transport)
-  '9981':18, // research & development
-  '9982':18, // legal & accounting services (incl. 998224 auditing/accounting)
-  '9983':18, // other professional, technical & business services
-  '9984':18, // telecom, broadcasting, information services
-  '9985':18, // support services
-  '9986':18, // agriculture/mining support
-  '9987':18, // maintenance, repair & installation
-  '9988':18, // manufacturing services (job work — many are 12; verify)
-  '9989':18, // other manufacturing/publishing/printing
-  '9991':18, // public admin services
-  '9992':18, // education services (many exempt — verify)
-  '9993':18, // human health & social care (many exempt — verify)
-  '9994':18, // sewage, waste, sanitation
-  '9995':18, // membership organisations
-  '9996':18, // recreational, cultural, sporting
-  '9997':18, // other services
-  '9998':18,'9999':18
-};
-function lookupGSTFromHSN(code){
-  if(!code) return null;
-  const c = code.trim().replace(/\s/g,'');
-  // 1. Exact specific-code overrides (most accurate) — checked first
-  if(HSN_GST_SPECIFIC[c] !== undefined) return HSN_GST_SPECIFIC[c];
-  if(c.length>=6 && HSN_GST_SPECIFIC[c.slice(0,6)] !== undefined) return HSN_GST_SPECIFIC[c.slice(0,6)];
-  // 2. Fall back to chapter/heading defaults (indicative)
-  if(HSN_GST_TABLE[c] !== undefined) return HSN_GST_TABLE[c];
-  if(c.length>=6 && HSN_GST_TABLE[c.slice(0,6)] !== undefined) return HSN_GST_TABLE[c.slice(0,6)];
-  if(c.length>=4 && HSN_GST_TABLE[c.slice(0,4)] !== undefined) return HSN_GST_TABLE[c.slice(0,4)];
-  if(c.length>=2 && HSN_GST_TABLE[c.slice(0,2)] !== undefined) return HSN_GST_TABLE[c.slice(0,2)];
-  return null;
-}
-function onHSNInput(id){
-  const hsn = document.getElementById(`po-item-hsn-${id}`)?.value;
-  const rate = lookupGSTFromHSN(hsn);
-  const gstField = document.getElementById(`po-item-gst-${id}`);
-  // Only auto-fill if the user hasn't manually set/touched the GST field.
-  // Once the user edits GST themselves, we never overwrite it.
-  const touched = gstField?.dataset?.touched === '1';
-  if(rate !== null && gstField && !touched){
-    gstField.value = rate;
-    gstField.dataset.autofilled = '1';
-  }
-  recalcPOTotal();
-}
-function onGSTManualEdit(id){
-  const gstField = document.getElementById(`po-item-gst-${id}`);
-  if(gstField){ gstField.dataset.touched = '1'; gstField.dataset.autofilled = '0'; }
-  recalcPOTotal();
-}
-
-let poItemCount = 0;
-function openNewPOModal(){
-  poItemCount = 0;
-  showModal(`
-    <span class="close-x" onclick="closeModal()">✕</span>
-    <h3>New Purchase Order</h3>
-    <div id="po-form"></div>
-  `, true);
-  loadVendorsIntoPOForm();
-}
-async function loadVendorsIntoPOForm(){
-  const { data: vendors, error: vErr } = await sb.from('vendors').select('id,name,gstin').eq('company_id', state.company.id).eq('status','active');
-  const { data: templates } = await sb.from('po_templates').select('id,name').eq('company_id', state.company.id);
-  const prefix = state.company.po_number_prefix || 'PO';
-  if(!state.company.gstin){
-    // nothing to do here yet — warning shown inline below once the form renders
-  }
-  document.getElementById('po-form').innerHTML = `
-    <label>PO Number</label><input id="po-number" value="${prefix}-${Date.now().toString().slice(-6)}"/>
-    <label style="margin-top:8px;display:block;">Vendor</label>
-    <select id="po-vendor" onchange="recalcPOTotal()">${(vendors||[]).map(v=>`<option value="${v.id}" data-gstin="${v.gstin||''}">${v.name}${v.gstin?'':' (no GSTIN on file)'}</option>`).join('') || '<option value="">— no active vendors, add one first —</option>'}</select>
-    ${vErr ? `<p style="color:var(--red);font-size:12px;">Couldn't load vendors: ${vErr.message}</p>` : ''}
-    ${!state.company.gstin ? `<p style="color:var(--amber);font-size:12px;">Your company has no GSTIN on file (Superadmin → company GSTIN) — CGST/SGST vs IGST can't be determined until it's set.</p>` : ''}
-    <label style="margin-top:8px;display:block;">Expected delivery date</label><input id="po-date" type="date"/>
-    ${(templates||[]).length ? `
-    <label style="margin-top:8px;display:block;">Load from template</label>
-    <select id="po-template" onchange="applyPOTemplate(this.value)">
-      <option value="">— none —</option>
-      ${templates.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}
-    </select>` : ''}
-    <label style="margin-top:12px;display:block;">Items</label>
-    <div style="overflow-x:auto;">
-    <div style="display:grid;grid-template-columns:2.2fr 1.1fr 0.7fr 1fr 0.7fr 1.1fr 32px;gap:6px;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:2px;min-width:640px;">
-      <span>Description</span><span>HSN/SAC</span><span>Qty</span><span>Unit price</span><span>GST %</span><span>Line total</span><span></span>
-    </div>
-    <div id="po-items" style="min-width:640px;"></div>
-    </div>
-    <button class="btn btn-sm" onclick="addPOItem()">+ Add item</button>
-    <p class="muted" style="font-size:11px;margin-top:4px;">GST % auto-fills from HSN/SAC where recognized (indicative only) — always double-check and edit if needed.</p>
-    <div style="text-align:right;margin-top:10px;font-size:13px;" id="po-tax-breakdown">
-      <div>Taxable amount: <span id="po-subtotal">₹0.00</span></div>
-      <div id="po-tax-lines"></div>
-      <div style="font-weight:700;font-size:15px;">Total: <span id="po-total">₹0.00</span></div>
-    </div>
-    <label>Notes</label><textarea id="po-notes" rows="2"></textarea>
-    ${state.company.po_requires_approval ? '<p class="muted">This company requires approval before a PO is sent to the vendor — it will be created as "pending approval".</p>' : ''}
-    <div style="display:flex;gap:8px;margin-top:14px;">
-      <button class="btn" style="flex:1;" onclick="saveAsTemplate()">Save items as template</button>
-      <button class="btn btn-primary" style="flex:1;" id="po-submit-btn" onclick="createPO()">Create PO</button>
-    </div>
-    <p style="margin-top:8px;font-size:13px;color:var(--red);" id="po-msg"></p>
-  `;
-  addPOItem();
-}
-async function applyPOTemplate(templateId){
-  if(!templateId) return;
-  const { data: t } = await sb.from('po_templates').select('*').eq('id', templateId).single();
-  document.getElementById('po-items').innerHTML = '';
-  poItemCount = 0;
-  (t.items||[]).forEach(it=>{
-    addPOItem();
-    const id = poItemCount;
-    document.getElementById(`po-item-desc-${id}`).value = it.description || '';
-    document.getElementById(`po-item-hsn-${id}`).value = it.hsn || '';
-    document.getElementById(`po-item-qty-${id}`).value = it.qty || 1;
-    document.getElementById(`po-item-price-${id}`).value = it.unit_price || 0;
-    document.getElementById(`po-item-gst-${id}`).value = (it.gst_rate ?? '') === '' ? '' : it.gst_rate;
-  });
-  if(t.vendor_id) document.getElementById('po-vendor').value = t.vendor_id;
-  recalcPOTotal();
-}
-async function saveAsTemplate(){
-  const name = prompt('Template name:');
-  if(!name) return;
-  const items = collectPOItems();
-  if(items.length===0){ toast('Add at least one item first', true); return; }
-  const vendor_id = document.getElementById('po-vendor').value || null;
-  const { error } = await sb.from('po_templates').insert({ company_id: state.company.id, name, vendor_id, items, created_by: state.profile.id });
-  if(error){ toast(error.message, true); return; }
-  toast('Template saved');
-}
-function addPOItem(){
-  poItemCount++;
-  const id = poItemCount;
-  const div = document.createElement('div');
-  div.className = 'item-row';
-  div.id = `po-item-${id}`;
-  div.style.gridTemplateColumns = '2.2fr 1.1fr 0.7fr 1fr 0.7fr 1.1fr 32px';
-  div.innerHTML = `
-    <input placeholder="Description" oninput="recalcPOTotal()" id="po-item-desc-${id}"/>
-    <input placeholder="HSN/SAC" oninput="onHSNInput(${id})" id="po-item-hsn-${id}"/>
-    <input type="number" placeholder="Qty" value="1" oninput="recalcPOTotal()" id="po-item-qty-${id}"/>
-    <input type="number" placeholder="Price" oninput="recalcPOTotal()" id="po-item-price-${id}"/>
-    <input type="number" placeholder="GST%" oninput="onGSTManualEdit(${id})" id="po-item-gst-${id}"/>
-    <span id="po-item-amt-${id}" class="muted" style="font-size:12px;align-self:center;">₹0.00</span>
-    <button class="btn btn-sm btn-danger" style="padding:4px 8px;" onclick="document.getElementById('po-item-${id}').remove(); recalcPOTotal();">✕</button>
-  `;
-  document.getElementById('po-items').appendChild(div);
-}
-function collectPOItems(){
-  const items = [];
-  document.querySelectorAll('#po-items .item-row').forEach(row=>{
-    const id = row.id.split('-').pop();
-    const desc = document.getElementById(`po-item-desc-${id}`)?.value;
-    const hsn = document.getElementById(`po-item-hsn-${id}`)?.value || '';
-    const qty = parseFloat(document.getElementById(`po-item-qty-${id}`)?.value)||0;
-    const price = parseFloat(document.getElementById(`po-item-price-${id}`)?.value)||0;
-    const gst_rate = parseFloat(document.getElementById(`po-item-gst-${id}`)?.value)||0;
-    const taxable_amount = qty*price;
-    const tax_amount = taxable_amount * gst_rate/100;
-    if(desc) items.push({description:desc, hsn, qty, unit_price:price, gst_rate, taxable_amount, tax_amount, amount: taxable_amount + tax_amount});
-  });
-  return items;
-}
-function recalcPOTotal(){
-  const items = collectPOItems();
-  document.querySelectorAll('#po-items .item-row').forEach(row=>{
-    const id = row.id.split('-').pop();
-    const qty = parseFloat(document.getElementById(`po-item-qty-${id}`)?.value)||0;
-    const price = parseFloat(document.getElementById(`po-item-price-${id}`)?.value)||0;
-    const gst_rate = parseFloat(document.getElementById(`po-item-gst-${id}`)?.value)||0;
-    const taxable = qty*price;
-    document.getElementById(`po-item-amt-${id}`).textContent = fmtMoney(taxable + taxable*gst_rate/100);
-  });
-  const subtotal = items.reduce((s,i)=>s+i.taxable_amount,0);
-  const tax = items.reduce((s,i)=>s+i.tax_amount,0);
-  const split = currentPOTaxSplit();
-  let taxLinesHtml = '';
-  if(split === 'intrastate'){
-    taxLinesHtml = `<div>CGST: ${fmtMoney(tax/2)}</div><div>SGST: ${fmtMoney(tax/2)}</div>`;
-  } else if(split === 'interstate'){
-    taxLinesHtml = `<div>IGST: ${fmtMoney(tax)}</div>`;
-  } else {
-    taxLinesHtml = `<div>GST (type undetermined — add GSTINs to split into CGST/SGST or IGST): ${fmtMoney(tax)}</div>`;
-  }
-  document.getElementById('po-subtotal').textContent = fmtMoney(subtotal);
-  document.getElementById('po-tax-lines').innerHTML = taxLinesHtml;
-  document.getElementById('po-total').textContent = fmtMoney(subtotal+tax);
-}
-async function createPO(){
-  const msg = document.getElementById('po-msg');
-  const btn = document.getElementById('po-submit-btn');
-  msg.textContent = '';
-  const po_number = document.getElementById('po-number').value.trim();
-  const vendor_id = document.getElementById('po-vendor').value;
-  const expected_delivery_date = document.getElementById('po-date').value || null;
-  const notes = document.getElementById('po-notes').value;
-  const items = collectPOItems();
-  const subtotal = items.reduce((s,i)=>s+i.taxable_amount,0);
-  const tax_amount = items.reduce((s,i)=>s+i.tax_amount,0);
-  if(!po_number){ msg.textContent = 'PO number is required.'; return; }
-  if(!vendor_id){ msg.textContent = 'Select a vendor — if none are listed, add an active vendor first from the Vendors tab.'; return; }
-  if(items.length===0){ msg.textContent = 'Add at least one item.'; return; }
-
-  const docCount = await docsThisMonth();
-  if(!planAllowsMore(docCount, state.plan?.max_docs_per_month)){
-    msg.textContent = `Your ${state.plan.plan} plan allows ${state.plan.max_docs_per_month} POs+invoices per month (used ${docCount}). Upgrade for more.`;
-    return;
-  }
-
-  btn.disabled = true; btn.textContent = 'Creating…';
-  try{
-    const initialStatus = state.company.po_requires_approval ? 'pending_approval' : 'draft';
-    const split = currentPOTaxSplit();
-    const cgst_amount = split === 'intrastate' ? tax_amount/2 : 0;
-    const sgst_amount = split === 'intrastate' ? tax_amount/2 : 0;
-    const igst_amount = split === 'interstate' ? tax_amount : 0;
-    const { data, error } = await sb.from('purchase_orders').insert({
-      company_id: state.company.id, po_number, vendor_id, items, subtotal,
-      tax_amount, cgst_amount, sgst_amount, igst_amount, tax_type: split === 'unknown' ? null : split,
-      total_amount: subtotal+tax_amount, expected_delivery_date, notes,
-      created_by: state.profile.id, status: initialStatus
-    }).select().single();
-    if(error){ msg.textContent = error.code === '23505' ? 'That PO number is already used — pick a different one.' : error.message; return; }
-    await logActivity(state.company.id, 'created_po', 'purchase_order', data.id, {po_number});
-    closeModal();
-    toast(initialStatus==='pending_approval' ? 'PO created — pending approval' : 'PO created as draft');
-    renderCompanyApp('pos');
-  } catch(e){
-    msg.textContent = 'Unexpected error: ' + (e.message || e);
-  } finally {
-    if(btn){ btn.disabled = false; btn.textContent = 'Create PO'; }
-  }
-}
-async function sendPO(id){
-  await sb.from('purchase_orders').update({status:'sent'}).eq('id', id);
-  await logActivity(state.company.id, 'sent_po', 'purchase_order', id, {});
-  toast('PO sent to vendor'); renderCompanyApp('pos');
-}
-
-// ---- Email a PO to the vendor ----
-// Opens a pre-filled email in the user's default mail app (mailto). The vendor's
-// email is the recipient; subject and body are auto-composed. The user attaches the
-// PDF (from the Print/PDF button) before sending. This needs no backend.
-async function emailPO(id){
-  const { data: po, error } = await sb.from('purchase_orders').select('*, vendors(name,email)').eq('id', id).single();
-  if(error){ toast('Could not load PO: '+error.message, true); return; }
-  const c = state.company;
-  const v = po.vendors || {};
-  showModal(`
-    <span class="close-x" onclick="closeModal()">✕</span>
-    <h3>Email PO ${po.po_number}</h3>
-    <label>To</label><input id="em-to" value="${v.email||''}"/>
-    <label style="margin-top:8px;display:block;">Subject</label>
-    <input id="em-subject" value="Purchase Order ${po.po_number} from ${c.name||''}"/>
-    <label style="margin-top:8px;display:block;">Body</label>
-    <textarea id="em-body" rows="10">Dear ${v.name||'Supplier'},
-
-Please find attached Purchase Order ${po.po_number} dated ${fmtDate(po.created_at)} for a total value of ${fmtMoney(po.total_amount)}.
-
-Kindly acknowledge receipt and confirm acceptance of this order as per the terms and conditions enclosed.${po.expected_delivery_date ? `\n\nExpected delivery date: ${fmtDate(po.expected_delivery_date)}.` : ''}
-
-For any queries, please reach out to us.
-
-Regards,
-${c.authorised_signatory || ''}
-${c.name||''}
-${c.contact_email||''} ${c.contact_phone?('· '+c.contact_phone):''}</textarea>
-    <p class="muted" style="margin-top:8px;">Tip: click "Print / PDF" first and save the PO, then attach it in your mail app after clicking below. The email opens in your default mail application.</p>
-    <div style="display:flex;gap:8px;margin-top:12px;">
-      <button class="btn" style="flex:1;" onclick="printPO('${id}')">Open PDF to attach</button>
-      <button class="btn btn-primary" style="flex:1;" onclick="launchMailto()">Open in email app</button>
-    </div>
-  `);
-}
-function launchMailto(){
-  const to = encodeURIComponent(document.getElementById('em-to').value);
-  const subject = encodeURIComponent(document.getElementById('em-subject').value);
-  const body = encodeURIComponent(document.getElementById('em-body').value);
-  window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
-}
-
-// Default general conditions printed on the PO annexure. Companies can override
-// this with their own text via Settings → PO Terms. This is a generic template of
-// standard commercial purchase conditions — companies should have their legal team
-// review/replace it with their own approved terms before using in production.
-const DEFAULT_PO_TERMS = `1. GENERAL
-1.1 This Purchase Order ("PO") together with these General Conditions constitutes the agreement between the Company (the buyer named above) and the Supplier for the supply of the goods and/or services described herein. The Supplier's own terms and conditions shall not apply unless expressly agreed in writing by the Company. In case of conflict, these Conditions shall prevail over any terms on the Supplier's invoice or other documents.
-
-2. ACCEPTANCE
-2.1 The Company will not be liable for any order unless issued through an official PO.
-2.2 Acceptance of the PO takes place if the Supplier accepts it in writing within three (3) working days of receipt, or by commencing manufacture, shipment, delivery of the goods, or performance of the services. If written acceptance is not received within three (3) working days, the PO will be deemed accepted by the Supplier.
-2.3 Any conditional acceptance or reservation must be notified to the Company in writing within three (3) days of receipt of the PO, failing which the PO is deemed accepted as issued.
-
-3. DELIVERY, TRANSPORTATION & PACKING
-3.1 The Supplier must meet the delivery/completion date specified in the PO. Time is of the essence. Failure to comply may lead to refusal of goods and/or services, with the Supplier bearing any additional costs.
-3.2 Goods shall be delivered to the delivery address specified. In respect of services, services shall be performed at the location specified in the PO. The Supplier and its employees shall comply with the Company's site safety and security policies.
-3.3 Unless stated otherwise, all goods shall be properly protected against damage and deterioration in transit and delivered on a Delivered Duty Paid basis, with a clear description and quantity of contents.
-3.4 Unless otherwise stated in the PO, the Supplier will not charge for containers, packaging, crating, boxing, or storage.
-3.5 The Company assumes no obligation to accept goods shipped in excess of the quantity ordered.
-
-4. WARRANTIES, LIABILITY & INSURANCE
-4.1 The Supplier warrants that all goods supplied will: be free from defects in design, material and workmanship; comply with the PO and any applicable specifications; be fit for their intended purpose; and meet the Company's requirements in all respects.
-4.2 The Supplier shall provide services using reasonable skill, care and diligence, utilising suitably skilled, experienced and qualified staff, and employing the best workmanship and materials.
-4.3 The Supplier represents and warrants that there are no third-party claims relating to the goods and/or services, that it complies with all applicable central, state and local laws, and that it holds all requisite approvals, registrations and consents required under applicable law.
-4.4 All goods and services will comply with all applicable laws, regulations and codes of practice, including those relating to fair and minimum wages, data privacy, and prohibition of child labour.
-4.5 The Supplier agrees to indemnify the Company in full against all claims, liability, loss, damages, costs and expenses arising out of or in connection with any personal injury or death, damage to property, breach of warranty, infringement of intellectual property rights, or any act or omission by the Supplier or its employees, agents or sub-contractors.
-4.6 The Supplier shall maintain adequate insurance in respect of its liabilities under this PO and shall provide evidence of such insurance on request.
-
-5. INSPECTION AND TESTING
-5.1 The Company has the right, after reasonable notice, to inspect or test the goods and/or services at the Supplier's or its sub-contractor's facilities. Inspection or testing does not relieve the Supplier of any liability, nor imply acceptance.
-5.2 If any defect is discovered at any time, the Company reserves the right to deduct the cost of defective goods and/or services from any amount owed to the Supplier.
-
-6. DOCUMENTATION
-6.1 The Supplier will provide, free of charge, all working drawings, operating instructions, specifications and information reasonably necessary to enable use of the goods or services for their intended purpose, together with certificates of origin, quantity, quality and compliance as reasonably required.
-6.2 The Supplier will, on the day of delivery/completion, send a separate advice note and invoice for each delivery or service itemised in the PO.
-
-7. TRANSFER OF TITLE AND RISK
-7.1 Risk of loss or damage will not pass to the Company until the goods have been delivered into the Company's possession and confirmed to be in accordance with the PO.
-7.2 Title to the goods passes to the Company on delivery, unless payment is made prior to delivery, in which case title (but not risk) passes upon payment.
-
-8. PRICE AND PAYMENT
-8.1 The price shall be as stated in the PO and, unless otherwise stated, exclusive of applicable GST. No additional charges will be paid unless agreed in writing in advance.
-8.2 The Supplier shall provide a proper tax invoice in the form, manner and within the time prescribed under GST law, quoting the valid PO number and the Company's GSTIN. Failure to do so may result in the Company withholding payment.
-8.3 The invoice must be reported in the Supplier's Form GSTR-1 and reflected in the Company's Form GSTR-2A/2B. Tax charged must be deposited with the Government in time. If input tax credit is denied to the Company due to reasons attributable to the Supplier, the Supplier shall indemnify the Company for the loss, including interest and penalty.
-8.4 The Company shall be entitled to deduct tax at source at applicable rates under the Income-tax Act, 1961.
-8.5 Payment shall be made within sixty (60) days from the date of receipt of a correct and complete invoice unless otherwise stated in the PO. Where the Supplier is a registered Micro, Small or Medium Enterprise (MSME), payment shall be made within forty-five (45) days.
-8.6 The Company may set off any amounts payable to the Supplier against any amounts the Supplier owes to the Company.
-
-9. ETHICS & COMPLIANCE
-9.1 The Supplier warrants that it has not and will not violate any applicable anti-bribery, anti-corruption, trade sanctions or anti-money-laundering laws in connection with this PO.
-9.2 The Supplier shall not, directly or indirectly, offer, give, request or accept any bribe, kickback, or improper payment to obtain or retain business or an undue advantage.
-9.3 The Supplier shall make its books and records relating to this PO available to the Company for inspection or audit on request.
-
-10. INTELLECTUAL PROPERTY
-10.1 All intellectual property rights in any works, materials, designs, specifications or documents generated or developed in the course of performing this PO shall be the exclusive property of the Company.
-10.2 The Supplier shall not acquire any right, title or interest in the Company's trademarks or other intellectual property, and shall use them only as authorised and solely for the purpose of fulfilling this PO.
-
-11. CONFIDENTIALITY & DATA PROTECTION
-11.1 The Supplier shall treat all information provided by or on behalf of the Company as confidential, use it only for the purposes of this PO, and protect it with at least reasonable care.
-11.2 The Supplier shall implement appropriate technical and organisational security measures to protect any personal data accessed in the course of providing goods/services, and shall process such personal data only in accordance with the Company's instructions and applicable data protection laws.
-11.3 Upon expiry or termination, the Supplier shall promptly return or securely destroy all confidential information and personal data, unless retention is required by law.
-
-12. TERMINATION & CANCELLATION
-12.1 The Company may terminate this PO immediately by written notice if the Supplier becomes insolvent, enters bankruptcy, liquidation or receivership, makes an arrangement with creditors, or ceases to carry on business.
-12.2 If goods and/or services are not supplied in accordance with the PO, the Company may require the Supplier to remedy the default within a reasonable period, failing which the Company may terminate and claim damages.
-12.3 The Company may cancel the PO in whole or in part by written notice. On cancellation the Supplier shall return all Company property.
-
-13. ASSIGNMENT & SUB-CONTRACTING
-13.1 The Company may assign this PO. The Supplier shall not assign or sub-contract its obligations without the Company's prior written consent, and remains fully responsible for any permitted sub-contractor.
-
-14. DISPUTE RESOLUTION & JURISDICTION
-14.1 Any dispute shall be referred to arbitration before a sole arbitrator under the Arbitration and Conciliation Act, 1996. The language shall be English and the seat and venue as specified by the Company. The courts having jurisdiction over the Company's registered office shall have exclusive jurisdiction.
-
-15. MISCELLANEOUS
-15.1 Notices shall be given in writing to the registered address of the relevant party.
-15.2 Neither party shall be liable for delay or non-performance caused by Force Majeure, provided prompt written notice is given.
-15.3 This PO constitutes the entire agreement regarding its subject matter and may only be modified in writing signed by both parties. No waiver is effective unless in writing. If any provision is held void or unenforceable, the remaining provisions continue in effect.`;
-
-// ---- number to Indian-format words (for PO amount in words) ----
-function numberToWordsIndian(num){
-  num = Math.round(Number(num)||0);
-  if(num === 0) return 'Zero';
-  const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
-  const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-  function twoDigits(n){
-    if(n < 20) return ones[n];
-    return tens[Math.floor(n/10)] + (n%10 ? ' ' + ones[n%10] : '');
-  }
-  function threeDigits(n){
-    return (n >= 100 ? ones[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' ' : '') : '') + (n%100 ? twoDigits(n%100) : '');
-  }
-  let result = '';
-  const crore = Math.floor(num/10000000); num %= 10000000;
-  const lakh = Math.floor(num/100000); num %= 100000;
-  const thousand = Math.floor(num/1000); num %= 1000;
-  const hundred = num;
-  if(crore) result += threeDigits(crore) + ' Crore ';
-  if(lakh) result += twoDigits(lakh) + ' Lakh ';
-  if(thousand) result += twoDigits(thousand) + ' Thousand ';
-  if(hundred) result += threeDigits(hundred);
-  return result.trim();
-}
-
-// ---- Print / PDF export of a PO (opens a formatted print view; browser's
-// "Save as PDF" in the print dialog produces the actual PDF file) ----
-async function printPO(id){
-  const { data: po, error } = await sb.from('purchase_orders').select('*, vendors(*)').eq('id', id).single();
-  if(error){ toast('Could not load PO: '+error.message, true); return; }
-  const c = state.company;
-  const v = po.vendors || {};
-  const shipTo = po.delivery_address || c.address || '';
-  const totalTax = Number(po.tax_amount)||0;
-
-  const itemRows = (po.items||[]).map((it,idx)=>{
-    const taxable = it.taxable_amount!==undefined ? it.taxable_amount : (it.qty*it.unit_price);
-    const itemTax = it.tax_amount!==undefined ? it.tax_amount : taxable*(it.gst_rate||0)/100;
-    return `<tr>
-      <td style="text-align:center;">${idx+1}</td>
-      <td>${it.hsn||'-'}</td>
-      <td>${it.description||''}</td>
-      <td style="text-align:center;">${it.qty}</td>
-      <td style="text-align:center;">${it.uom||'EA'}</td>
-      <td style="text-align:center;">${it.rcm ? 'Yes' : 'No'}</td>
-      <td style="text-align:right;">${fmtMoney(taxable)}</td>
-      <td style="text-align:center;">${it.gst_rate||0}%</td>
-      <td style="text-align:right;">${fmtMoney(itemTax)}</td>
-      <td style="text-align:right;">${fmtMoney(taxable+itemTax)}</td>
-    </tr>`;
-  }).join('');
-
-  let taxSummary = '';
-  if(po.tax_type === 'intrastate'){
-    taxSummary = `<tr><td colspan="9" style="text-align:right;">CGST</td><td style="text-align:right;">${fmtMoney(po.cgst_amount)}</td></tr>
-                  <tr><td colspan="9" style="text-align:right;">SGST</td><td style="text-align:right;">${fmtMoney(po.sgst_amount)}</td></tr>`;
-  } else if(po.tax_type === 'interstate'){
-    taxSummary = `<tr><td colspan="9" style="text-align:right;">IGST</td><td style="text-align:right;">${fmtMoney(po.igst_amount)}</td></tr>`;
-  } else {
-    taxSummary = `<tr><td colspan="9" style="text-align:right;">GST</td><td style="text-align:right;">${fmtMoney(totalTax)}</td></tr>`;
-  }
-
-  const termsBlock = (c.po_terms || DEFAULT_PO_TERMS);
-  const paymentTerms = c.po_payment_terms || 'Payment shall be made within sixty (60) days from the date of receipt of the invoice unless otherwise stated in the PO.';
-
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>PO ${po.po_number}</title>
-  <style>
-    @page { margin: 18mm 14mm; }
-    body{font-family:'Times New Roman',Georgia,serif;color:#000;font-size:12px;line-height:1.4;margin:0;}
-    .header{text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:4px;}
-    .company-name{font-size:17px;font-weight:bold;margin-bottom:3px;}
-    .company-meta{font-size:10px;line-height:1.35;}
-    .po-title{text-align:center;font-size:15px;font-weight:bold;letter-spacing:1px;margin:10px 0;text-transform:uppercase;}
-    .parties{display:flex;justify-content:space-between;gap:12px;margin-bottom:10px;}
-    .party{width:49%;border:1px solid #000;padding:6px 8px;font-size:11px;}
-    .party h4{margin:0 0 4px;font-size:11px;text-transform:uppercase;border-bottom:1px solid #999;padding-bottom:2px;}
-    .po-meta-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:8px;}
-    table.items{width:100%;border-collapse:collapse;margin-top:6px;}
-    table.items th, table.items td{border:1px solid #000;padding:4px 5px;font-size:10.5px;}
-    table.items th{background:#e8e8e8;text-align:center;font-size:10px;}
-    .totals-label{font-weight:bold;}
-    .amount-words{margin-top:6px;font-size:11px;font-style:italic;border:1px solid #000;padding:5px 8px;}
-    .signatory{margin-top:30px;text-align:right;font-size:11px;}
-    .section-title{font-weight:bold;font-size:12px;margin:14px 0 4px;border-bottom:1px solid #000;}
-    .terms{font-size:9px;line-height:1.35;text-align:justify;white-space:pre-wrap;column-count:1;}
-    .page-break{page-break-before:always;}
-    .no-print{margin-top:20px;}
-    @media print{ .no-print{display:none;} }
-  </style></head><body>
-
-    <div class="header">
-      <div class="company-name">${c.name||''}</div>
-      <div class="company-meta">
-        ${c.address ? `Office Address: ${c.address}<br>` : ''}
-        ${c.registered_office ? `Regd Office: ${c.registered_office}<br>` : ''}
-        ${[c.pan?`PAN: ${c.pan}`:'', c.cin?`CIN: ${c.cin}`:'', c.contact_phone?`Phone: ${c.contact_phone}`:'', c.fax?`Fax: ${c.fax}`:'', c.gstin?`GSTIN: ${c.gstin}`:''].filter(Boolean).join(' &nbsp; ')}
-        ${(c.contact_email||c.website) ? `<br>${[c.contact_email?`Email: ${c.contact_email}`:'', c.website?`Website: ${c.website}`:''].filter(Boolean).join(' &nbsp; ')}` : ''}
-      </div>
-    </div>
-
-    <div class="po-title">Purchase Order</div>
-
-    <div class="parties">
-      <div class="party">
-        <h4>Supplier / Vendor</h4>
-        <strong>${v.name||''}</strong><br>
-        ${v.address||''}<br>
-        ${v.state?`State: ${v.state} `:''}${v.state_code?`(${v.state_code})`:''}<br>
-        ${v.gstin?`GSTIN: ${v.gstin}`:''} ${v.pan?`&nbsp; PAN: ${v.pan}`:''}<br>
-        ${v.email||''} ${v.phone?`&nbsp; ${v.phone}`:''}
-      </div>
-      <div class="party">
-        <h4>Bill To / Ship To</h4>
-        ${shipTo}<br>
-        ${c.gstin?`GSTIN: ${c.gstin}`:''}
-      </div>
-    </div>
-
-    <div class="po-meta-row">
-      <span><strong>PO No:</strong> ${po.po_number}</span>
-      <span><strong>Order Date:</strong> ${fmtDate(po.created_at)}</span>
-      <span><strong>Status:</strong> ${po.status}</span>
-      ${po.expected_delivery_date?`<span><strong>Expected Delivery:</strong> ${fmtDate(po.expected_delivery_date)}</span>`:''}
-    </div>
-
-    <p style="font-size:11px;margin:6px 0;">Please supply the following in accordance with the delivery instructions below — Amount in INR</p>
-
-    <table class="items">
-      <tr>
-        <th>S.No</th><th>HSN/SAC</th><th>Item Description</th><th>Qty</th><th>UOM</th><th>RCM</th>
-        <th>Taxable Value</th><th>Tax Rate</th><th>Tax Amt</th><th>Total</th>
-      </tr>
-      ${itemRows}
-      <tr><td colspan="9" style="text-align:right;" class="totals-label">Taxable Amount</td><td style="text-align:right;">${fmtMoney(po.subtotal)}</td></tr>
-      ${taxSummary}
-      <tr><td colspan="9" style="text-align:right;" class="totals-label">Total Purchase Order Value</td><td style="text-align:right;" class="totals-label">${fmtMoney(po.total_amount)}</td></tr>
-    </table>
-
-    <div class="amount-words">INR ${numberToWordsIndian(po.total_amount).toUpperCase()} ONLY</div>
-
-    ${po.notes ? `<p style="font-size:11px;margin-top:8px;"><strong>Notes:</strong> ${po.notes}</p>` : ''}
-
-    <div style="font-size:11px;margin-top:8px;"><strong>Payment Terms:</strong> ${paymentTerms}</div>
-
-    <div class="signatory">
-      For <strong>${c.name||''}</strong><br><br><br>
-      (${c.authorised_signatory || 'Authorised Signatory'})
-    </div>
-
-    <div class="page-break"></div>
-    <div class="section-title">Annexure — General Conditions of Purchase of Goods &amp; Services</div>
-    <div class="terms">${termsBlock.replace(/</g,'&lt;')}</div>
-
-    <button class="no-print" onclick="window.print()" style="padding:10px 18px;font-size:13px;">Print / Save as PDF</button>
-    <scr`+`ipt>window.onload = () => window.print();</scr`+`ipt>
-  </body></html>`;
-  const w = window.open('', '_blank');
-  if(!w){ toast('Please allow pop-ups to view/print the PO', true); return; }
-  w.document.write(html);
-  w.document.close();
-}
-
-// ---- Vendor management (company side) ----
-function openNewVendorModal(){
-  showModal(`
-    <span class="close-x" onclick="closeModal()">✕</span>
-    <h3>Add vendor</h3>
-    <label>Business name</label><input id="nv-name"/>
-    <label style="margin-top:8px;display:block;">Email (they'll sign up with this)</label><input id="nv-email"/>
-    <label style="margin-top:8px;display:block;">Phone</label><input id="nv-phone"/>
-    <label style="margin-top:8px;display:block;">GSTIN</label><input id="nv-gstin"/>
-    <p class="muted">This pre-registers the vendor. They'll complete signup themselves using the company signup link, or you can invite them by email separately.</p>
-    <button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="createVendor()">Add vendor</button>
-    <p class="muted" id="nv-msg"></p>
-  `);
-}
-async function createVendor(){
-  const name = document.getElementById('nv-name').value.trim();
-  const email = document.getElementById('nv-email').value.trim();
-  const phone = document.getElementById('nv-phone').value.trim();
-  const gstin = document.getElementById('nv-gstin').value.trim().toUpperCase();
-  const msg = document.getElementById('nv-msg');
-  msg.style.color = 'var(--red)';
-  if(!name || !email){ msg.textContent = 'Business name and email are required.'; return; }
-  if(gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z][Z][0-9A-Z]$/.test(gstin)){
-    msg.textContent = 'That GSTIN doesn\'t match the standard 15-character format (e.g. 27ABCDE1234F1Z5) — double-check it, or leave it blank if unknown.';
-    return;
-  }
-  const vCount = await countRows('vendors');
-  if(!planAllowsMore(vCount, state.plan?.max_vendors)){
-    msg.textContent = `Your ${state.plan.plan} plan allows up to ${state.plan.max_vendors} vendors. Upgrade to add more.`;
-    return;
-  }
-  const { data, error } = await sb.from('vendors').insert({
-    company_id: state.company.id, name, email, phone, gstin, status:'pending'
-  }).select().single();
-  if(error){ msg.textContent = error.message; return; }
-  await logActivity(state.company.id, 'added_vendor', 'vendor', data.id, {name});
-  closeModal(); toast('Vendor added (pending)'); renderCompanyApp('vendors');
-}
-async function openVendorDetail(id){
-  const { data: v, error } = await sb.from('vendors').select('*').eq('id', id).single();
-  if(error){ toast(error.message, true); return; }
-  async function docLink(path, label){
-    if(!path) return `<div class="muted">${label}: not uploaded</div>`;
-    const { data } = await sb.storage.from('vendor-docs').createSignedUrl(path, 3600);
-    return `<div>${label}: ${data?.signedUrl ? `<a href="${data.signedUrl}" target="_blank">View →</a>` : 'uploaded'}</div>`;
-  }
-  const cheque = await docLink(v.cancelled_cheque_path, 'Cancelled cheque');
-  const gst = await docLink(v.gst_certificate_path, 'GST certificate');
-  const inc = await docLink(v.incorporation_cert_path, 'Incorporation certificate');
-  showModal(`
-    <span class="close-x" onclick="closeModal()">✕</span>
-    <h3>${v.name}</h3>
-    <p class="muted">${badge(v.status)}</p>
-    <table style="font-size:13px;">
-      <tr><td>Email</td><td>${v.email||'-'}</td></tr>
-      <tr><td>Phone</td><td>${v.phone||'-'}</td></tr>
-      <tr><td>GSTIN</td><td>${v.gstin||'-'}</td></tr>
-      <tr><td>PAN</td><td>${v.pan||'-'}</td></tr>
-      <tr><td>State</td><td>${v.state||'-'} ${v.state_code?`(${v.state_code})`:''}</td></tr>
-      <tr><td>Address</td><td>${v.address||'-'}</td></tr>
-      <tr><td>Bank</td><td>${v.bank_account_name||'-'} ${v.bank_account_number?('· '+v.bank_account_number):''} ${v.bank_ifsc?('· '+v.bank_ifsc):''}</td></tr>
-    </table>
-    <h4 style="margin:12px 0 6px;">Documents</h4>
-    ${cheque}${gst}${inc}
-    <div style="display:flex;gap:8px;margin-top:14px;">
-      ${v.status==='pending'?`<button class="btn btn-green" style="flex:1;" onclick="setVendorStatus('${v.id}','active'); closeModal();">Activate vendor</button>`:''}
-      ${v.status==='active'?`<button class="btn btn-danger" style="flex:1;" onclick="setVendorStatus('${v.id}','disabled'); closeModal();">Disable</button>`:''}
-    </div>
-  `);
-}
-async function setVendorStatus(id, status){
-  await sb.from('vendors').update({status}).eq('id', id);
-  await logActivity(state.company.id, 'vendor_status_'+status, 'vendor', id, {});
-  toast('Vendor '+status); renderCompanyApp('vendors');
-}
-
-// ---- Team management ----
-function openNewUserModal(){
-  showModal(`
-    <span class="close-x" onclick="closeModal()">✕</span>
-    <h3>Add team member</h3>
-    <label>Email</label><input id="nu-email"/>
-    <label style="margin-top:8px;display:block;">Temp password</label><input id="nu-pass"/>
-    <label style="margin-top:8px;display:block;">Role</label>
-    <select id="nu-role"><option value="staff">Staff</option><option value="approver">Approver</option><option value="company_admin">Company admin</option></select>
-    <label style="margin-top:8px;display:block;">Approval level (if approver)</label><input id="nu-level" type="number" value="1" min="1" max="5"/>
-    <button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="createTeamUser()">Add</button>
-    <p class="muted" id="nu-msg"></p>
-  `);
-}
-async function createTeamUser(){
-  const email = document.getElementById('nu-email').value.trim();
-  const password = document.getElementById('nu-pass').value;
-  const role = document.getElementById('nu-role').value;
-  const approval_level = parseInt(document.getElementById('nu-level').value)||1;
-  const msg = document.getElementById('nu-msg');
-  const uCount = await countRows('company_users');
-  if(!planAllowsMore(uCount, state.plan?.max_users)){
-    msg.textContent = `Your ${state.plan.plan} plan allows up to ${state.plan.max_users} team users. Upgrade to add more.`;
-    return;
-  }
-  const { data: sdata, error: serr } = await scratchClient().auth.signUp({ email, password });
-  if(serr){ msg.textContent = serr.message; return; }
-  const { error } = await sb.from('company_users').insert({
-    company_id: state.company.id, auth_user_id: sdata.user.id, email, role, approval_level, name: email
-  });
-  if(error){ msg.textContent = error.message; return; }
-  closeModal(); toast('Team member added'); renderCompanyApp('users');
-}
-
-// ---- Invoice review / approval ----
-// ---- Invoice ↔ PO matching (3-way style check) ----
-// Compares the vendor's submitted invoice against the PO it's billed against and
-// returns a status of matched / partial / unmatched with human-readable reasons.
-function matchInvoiceToPO(inv, po){
-  const reasons = [];
-  if(!po){ return {status:'unmatched', reasons:['No linked purchase order found for this invoice.']}; }
-
-  // 1. Vendor must be the same
-  if(inv.vendor_id !== po.vendor_id){
-    reasons.push('Invoice vendor does not match the PO vendor.');
-  }
-
-  // 2. Amount comparison (allow ₹1 rounding tolerance)
-  const invTotal = Number(inv.total_amount)||0;
-  const poTotal = Number(po.total_amount)||0;
-  const diff = +(invTotal - poTotal).toFixed(2);
-  if(Math.abs(diff) <= 1){
-    // amounts align
-  } else if(invTotal < poTotal){
-    reasons.push(`Invoice total ${fmtMoney(invTotal)} is less than PO total ${fmtMoney(poTotal)} (short by ${fmtMoney(Math.abs(diff))}) — likely a partial/part-delivery invoice.`);
-  } else {
-    reasons.push(`Invoice total ${fmtMoney(invTotal)} exceeds PO total ${fmtMoney(poTotal)} (over by ${fmtMoney(diff)}).`);
-  }
-
-  // 3. Taxable/tax split comparison if available
-  if(inv.amount !== undefined && po.subtotal !== undefined){
-    const invBase = Number(inv.amount)||0, poBase = Number(po.subtotal)||0;
-    if(Math.abs(invBase - poBase) > 1){
-      reasons.push(`Taxable value differs: invoice ${fmtMoney(invBase)} vs PO ${fmtMoney(poBase)}.`);
-    }
-  }
-  if(inv.tax_amount !== undefined && po.tax_amount !== undefined){
-    const it = Number(inv.tax_amount)||0, pt = Number(po.tax_amount)||0;
-    if(Math.abs(it - pt) > 1){
-      reasons.push(`Tax amount differs: invoice ${fmtMoney(it)} vs PO ${fmtMoney(pt)}.`);
-    }
-  }
-
-  // Decide overall status
-  if(reasons.length === 0) return {status:'matched', reasons:['Invoice total, taxable value and tax match the PO.']};
-
-  const onlyAmountDiff = reasons.every(r => r.includes('less than') || r.includes('exceeds') || r.includes('Taxable value differs') || r.includes('Tax amount differs'));
-  const vendorMismatch = reasons.some(r => r.includes('vendor'));
-  if(vendorMismatch) return {status:'unmatched', reasons};
-  // amount differences → partial; big overage could be treated stricter but we flag as partial with reason
-  return {status: onlyAmountDiff ? 'partial' : 'unmatched', reasons};
-}
-function matchBadge(status){
-  const map = {matched:'badge-approved', partial:'badge-submitted', unmatched:'badge-rejected'};
-  const label = {matched:'MATCHED', partial:'PARTIALLY MATCHED', unmatched:'UNMATCHED'};
-  return `<span class="badge ${map[status]}">${label[status]}</span>`;
-}
-
-async function openInvoiceModal(id){
-  const { data: inv } = await sb.from('invoices').select('*, vendors(name,email), purchase_orders(*)').eq('id',id).single();
-  const { data: fileUrl } = await sb.storage.from('invoices').createSignedUrl(inv.file_path, 3600);
-  const { data: history } = await sb.from('approvals').select('*, company_users(name,email)').eq('invoice_id', id).order('acted_at');
-  const levels = state.company.approval_levels || 1;
-  const canApprove = state.role === 'company_admin' || (state.role==='approver' && state.profile.approval_level === inv.current_approval_level);
-  const po = inv.purchase_orders;
-  const match = matchInvoiceToPO(inv, po);
-
-  showModal(`
-    <span class="close-x" onclick="closeModal()">✕</span>
-    <h3>Invoice ${inv.invoice_number}</h3>
-    <p class="muted">Vendor: ${inv.vendors?.name} · PO: ${po?.po_number || '—'}</p>
-    <p>Amount: <strong>${fmtMoney(inv.total_amount)}</strong> &nbsp; Status: ${badge(inv.status)}</p>
-    <div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin:10px 0;background:#fafafa;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <strong style="font-size:13px;">PO Match</strong>
-        ${matchBadge(match.status)}
-      </div>
-      <table style="margin-top:8px;font-size:12px;">
-        <tr><th></th><th style="text-align:right;">Invoice</th><th style="text-align:right;">PO</th></tr>
-        <tr><td>Taxable</td><td style="text-align:right;">${fmtMoney(inv.amount)}</td><td style="text-align:right;">${po?fmtMoney(po.subtotal):'—'}</td></tr>
-        <tr><td>Tax</td><td style="text-align:right;">${fmtMoney(inv.tax_amount)}</td><td style="text-align:right;">${po?fmtMoney(po.tax_amount):'—'}</td></tr>
-        <tr><td>Total</td><td style="text-align:right;"><strong>${fmtMoney(inv.total_amount)}</strong></td><td style="text-align:right;"><strong>${po?fmtMoney(po.total_amount):'—'}</strong></td></tr>
-      </table>
-      <div style="margin-top:6px;font-size:12px;">
-        ${match.reasons.map(r=>`<div class="muted">• ${r}</div>`).join('')}
-      </div>
-    </div>
-    <p>Approval progress: level ${inv.current_approval_level} of ${levels}</p>
-    ${fileUrl?.signedUrl ? `<p><a href="${fileUrl.signedUrl}" target="_blank">View invoice file →</a></p>` : ''}
-    <div style="margin-top:10px;">
-      <h4 style="margin-bottom:4px;">History</h4>
-      ${(history||[]).length ? history.map(h=>`<p class="muted">${badge(h.action)} by ${h.company_users?.name||h.company_users?.email} on ${fmtDate(h.acted_at)} ${h.comments?('— '+h.comments):''}</p>`).join('') : '<p class="muted">No actions yet.</p>'}
-    </div>
-    ${(canApprove && ['submitted','under_review'].includes(inv.status)) ? `
-      ${match.status !== 'matched' ? `<p style="color:var(--amber);font-size:12px;">⚠ This invoice is ${match.status === 'partial' ? 'partially matched' : 'unmatched'} against the PO — review the reasons above before approving.</p>` : ''}
-      <label style="margin-top:10px;display:block;">Comments</label>
-      <textarea id="inv-comments" rows="2">${match.status !== 'matched' ? '['+match.status.toUpperCase()+'] ' : ''}</textarea>
-      <div style="display:flex;gap:8px;margin-top:10px;">
-        <button class="btn btn-green" style="flex:1;" onclick="actOnInvoice('${id}','approved')">Approve</button>
-        <button class="btn btn-danger" style="flex:1;" onclick="actOnInvoice('${id}','rejected')">Reject</button>
-      </div>
-    ` : (['submitted','under_review'].includes(inv.status) ? '<p class="muted">Waiting on a different approval level.</p>' : '')}
-  `);
-}
-async function actOnInvoice(id, action){
-  const comments = document.getElementById('inv-comments').value;
-  const { data: inv } = await sb.from('invoices').select('*').eq('id', id).single();
-  const levels = state.company.approval_levels || 1;
-
-  await sb.from('approvals').insert({
-    invoice_id: id, approver_id: state.profile.id, level: inv.current_approval_level, action, comments
-  });
-
-  if(action === 'rejected'){
-    await sb.from('invoices').update({status:'rejected', rejection_reason: comments}).eq('id', id);
-  } else {
-    if(inv.current_approval_level >= levels){
-      await sb.from('invoices').update({status:'approved'}).eq('id', id);
-    } else {
-      await sb.from('invoices').update({status:'under_review', current_approval_level: inv.current_approval_level+1}).eq('id', id);
-    }
-  }
-  await logActivity(state.company.id, `invoice_${action}`, 'invoice', id, {comments});
-  closeModal(); toast('Recorded'); renderCompanyApp('invoices');
-}
-
-// ============================================================
-// VENDOR APP
-// ============================================================
-function renderVendorProfileForm(){
-  const v = state.profile;
-  return `<div class="card">
-    <h3 style="margin-top:0;">Business details</h3>
-    <div class="grid grid-2">
-      <div><label>Business name</label><input id="vp-name" value="${v.name||''}"/></div>
-      <div><label>Phone</label><input id="vp-phone" value="${v.phone||''}"/></div>
-      <div><label>GSTIN</label><input id="vp-gstin" value="${v.gstin||''}" placeholder="27ABCDE1234F1Z5"/></div>
-      <div><label>PAN</label><input id="vp-pan" value="${v.pan||''}"/></div>
-      <div><label>State</label><input id="vp-state" value="${v.state||''}"/></div>
-      <div><label>State code</label><input id="vp-statecode" value="${v.state_code||''}"/></div>
-    </div>
-    <label style="margin-top:8px;display:block;">Address</label><textarea id="vp-address" rows="2">${v.address||''}</textarea>
-    <h4 style="margin:14px 0 6px;">Bank details</h4>
-    <div class="grid grid-2">
-      <div><label>Account holder name</label><input id="vp-bankname" value="${v.bank_account_name||''}"/></div>
-      <div><label>Account number</label><input id="vp-bankacc" value="${v.bank_account_number||''}"/></div>
-      <div><label>IFSC</label><input id="vp-ifsc" value="${v.bank_ifsc||''}"/></div>
-    </div>
-    <button class="btn btn-primary" style="margin-top:12px;" onclick="saveVendorProfile()">Save details</button>
-    <p style="font-size:13px;color:var(--red);" id="vp-msg"></p>
   </div>
-  <div class="card">
-    <h3 style="margin-top:0;">Documents (KYC)</h3>
-    <p class="muted">Upload PDF or image (JPG/PNG), max 50 MB each. Your client can view these to verify and activate you.</p>
-    <div class="grid grid-2" style="gap:14px;">
-      <div>
-        <label>Cancelled cheque</label>
-        <input type="file" id="vp-file-cheque" accept=".pdf,.jpg,.jpeg,.png"/>
-        <button class="btn btn-sm" style="margin-top:6px;" onclick="uploadVendorDoc('cheque')">Upload cheque</button>
-        <div id="vp-link-cheque" class="muted" style="margin-top:4px;">—</div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">Purchase Orders · Vendors · Invoice Approval</div>
+      <h1>Procurement that <em>speaks GST.</em></h1>
+      <p class="lead">Raise purchase orders, onboard your vendors, and approve their invoices — with CGST, SGST and IGST worked out automatically. Built by chartered accountants, for Indian businesses.</p>
+      <div class="hero-cta">
+        <a href="https://app.kiyra.ai" class="btn btn-primary">Start 14-day free trial</a>
+        <a href="pricing.html" class="btn">See pricing</a>
       </div>
-      <div>
-        <label>GST certificate</label>
-        <input type="file" id="vp-file-gst" accept=".pdf,.jpg,.jpeg,.png"/>
-        <button class="btn btn-sm" style="margin-top:6px;" onclick="uploadVendorDoc('gst')">Upload GST cert</button>
-        <div id="vp-link-gst" class="muted" style="margin-top:4px;">—</div>
-      </div>
-      <div>
-        <label>Incorporation certificate</label>
-        <input type="file" id="vp-file-inc" accept=".pdf,.jpg,.jpeg,.png"/>
-        <button class="btn btn-sm" style="margin-top:6px;" onclick="uploadVendorDoc('inc')">Upload incorporation cert</button>
-        <div id="vp-link-inc" class="muted" style="margin-top:4px;">—</div>
+      <p class="hero-note">No card required to trial · GST-compliant documents · Your data isolated per company</p>
+    </div>
+    <div>
+      <div class="doc-card">
+        <div class="doc-head">
+          <div class="t">Purchase Order</div>
+          <div class="n">PO-250918<br>18 Sep 2026</div>
+        </div>
+        <div class="doc-row h"><span>Item</span><span class="r">Qty</span><span class="r">Rate</span><span class="r">Amount</span></div>
+        <div class="doc-row"><span>Corrugated boxes (HSN 4819)</span><span class="r">500</span><span class="r">₹42</span><span class="r">₹21,000</span></div>
+        <div class="doc-row"><span>Packing tape (HSN 3919)</span><span class="r">120</span><span class="r">₹65</span><span class="r">₹7,800</span></div>
+        <div class="gst-split"><span>CGST 9% · ₹2,592</span><span>SGST 9% · ₹2,592</span></div>
+        <div class="doc-tot"><span>Total</span><span>₹33,984</span></div>
+        <div class="doc-badge">✓ Invoice matched to PO</div>
       </div>
     </div>
-    <p style="font-size:13px;" id="vp-doc-msg"></p>
-  </div>`;
-}
-async function saveVendorProfile(){
-  const msg = document.getElementById('vp-msg');
-  msg.style.color = 'var(--red)';
-  const gstin = document.getElementById('vp-gstin').value.trim().toUpperCase();
-  if(gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z][Z][0-9A-Z]$/.test(gstin)){
-    msg.textContent = 'GSTIN format looks wrong (e.g. 27ABCDE1234F1Z5). Fix it or clear it.'; return;
-  }
-  const patch = {
-    name: document.getElementById('vp-name').value.trim(),
-    phone: document.getElementById('vp-phone').value.trim() || null,
-    gstin: gstin || null,
-    pan: document.getElementById('vp-pan').value.trim().toUpperCase() || null,
-    state: document.getElementById('vp-state').value.trim() || null,
-    state_code: document.getElementById('vp-statecode').value.trim() || null,
-    address: document.getElementById('vp-address').value.trim() || null,
-    bank_account_name: document.getElementById('vp-bankname').value.trim() || null,
-    bank_account_number: document.getElementById('vp-bankacc').value.trim() || null,
-    bank_ifsc: document.getElementById('vp-ifsc').value.trim().toUpperCase() || null
-  };
-  const { error } = await sb.from('vendors').update(patch).eq('id', state.profile.id);
-  if(error){ msg.textContent = error.message; return; }
-  state.profile = {...state.profile, ...patch};
-  toast('Profile saved');
-}
-async function uploadVendorDoc(kind){
-  const map = {
-    cheque: { input:'vp-file-cheque', col:'cancelled_cheque_path', label:'cheque' },
-    gst:    { input:'vp-file-gst',    col:'gst_certificate_path',   label:'GST certificate' },
-    inc:    { input:'vp-file-inc',    col:'incorporation_cert_path',label:'incorporation certificate' }
-  };
-  const cfg = map[kind];
-  const msg = document.getElementById('vp-doc-msg');
-  msg.style.color = 'var(--red)';
-  const file = document.getElementById(cfg.input).files[0];
-  if(!file){ msg.textContent = 'Choose a file first.'; return; }
-  if(file.size > 50*1024*1024){ msg.textContent = 'File exceeds 50 MB.'; return; }
-  const path = `${state.profile.id}/${kind}_${Date.now()}_${file.name}`;
-  const { error: upErr } = await sb.storage.from('vendor-docs').upload(path, file, { upsert:true });
-  if(upErr){ msg.textContent = 'Upload failed: '+upErr.message; return; }
-  const { error: dbErr } = await sb.from('vendors').update({ [cfg.col]: path }).eq('id', state.profile.id);
-  if(dbErr){ msg.textContent = 'Saved file but couldn\'t record it: '+dbErr.message; return; }
-  state.profile[cfg.col] = path;
-  msg.style.color = 'var(--green)';
-  msg.textContent = cfg.label.charAt(0).toUpperCase()+cfg.label.slice(1)+' uploaded.';
-  loadVendorDocLinks();
-}
-async function loadVendorDocLinks(){
-  const items = [
-    { col:'cancelled_cheque_path', el:'vp-link-cheque' },
-    { col:'gst_certificate_path',  el:'vp-link-gst' },
-    { col:'incorporation_cert_path', el:'vp-link-inc' }
-  ];
-  for(const it of items){
-    const el = document.getElementById(it.el);
-    if(!el) continue;
-    const p = state.profile[it.col];
-    if(!p){ el.textContent = 'Not uploaded'; continue; }
-    const { data } = await sb.storage.from('vendor-docs').createSignedUrl(p, 3600);
-    el.innerHTML = data?.signedUrl ? `<a href="${data.signedUrl}" target="_blank">View uploaded file →</a>` : 'Uploaded';
-  }
-}
+  </div>
+</header>
 
-async function renderVendorApp(tab){
-  state.activeTab = tab || state.activeTab || 'pos';
-  const vid = state.profile.id;
-  const notActive = state.profile.status !== 'active';
+<div class="trust">
+  <div class="wrap">
+    <div class="item"><strong>CGST / SGST / IGST</strong> auto-split</div>
+    <div class="item"><strong>HSN &amp; SAC</strong> GST-rate lookup</div>
+    <div class="item"><strong>Multi-level</strong> approvals</div>
+    <div class="item"><strong>Invoice–PO</strong> matching</div>
+    <div class="item"><strong>Vendor KYC</strong> &amp; documents</div>
+  </div>
+</div>
 
-  let body = `<div class="tabs">
-    ${!notActive ? `<div class="tab ${state.activeTab==='pos'?'active':''}" onclick="renderVendorApp('pos')">My Purchase Orders</div>
-    <div class="tab ${state.activeTab==='invoices'?'active':''}" onclick="renderVendorApp('invoices')">My Invoices</div>` : ''}
-    <div class="tab ${state.activeTab==='profile'?'active':''}" onclick="renderVendorApp('profile')">My Profile &amp; Documents</div>
-  </div>`;
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>From purchase order to paid — in one place</h2>
+      <p>A simple, controlled flow that keeps your team and your vendors on the same page.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Raise the PO</h3>
+        <p>Add items with HSN/SAC codes; GST rate and the CGST/SGST or IGST split fill in automatically. Download a professional PDF or email it to the vendor.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Vendor uploads invoice</h3>
+        <p>Your vendor signs in to their own portal, sees the PO, and uploads their invoice against it — no chasing over email.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Auto-match &amp; approve</h3>
+        <p>The invoice is checked against the PO — matched, partially matched, or unmatched, with clear reasons — then routed through your approval levels.</p>
+      </div>
+      <div class="step">
+        <div class="num">4</div>
+        <h3>Track to paid</h3>
+        <p>Approve, record payment with a reference, and keep a full audit trail. Export to CSV for your books whenever you need.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-  if(notActive && state.activeTab !== 'profile'){
-    body += `<div class="card"><p>Your account is <strong>${state.profile.status}</strong>. You'll be able to view POs and submit invoices once ${state.company.name} activates your account.</p>
-    <p class="muted">In the meantime, please complete your profile and upload your documents under "My Profile &amp; Documents" — it helps your client activate you faster.</p></div>`;
-    document.getElementById('root').innerHTML = shell(state.company.name, `${state.profile.name} · Vendor`, body);
-    return;
-  }
+<section id="features" class="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Everything a growing business needs to control spend</h2>
+      <p>Purpose-built for Indian SMEs — not a generic global tool with GST bolted on.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat">
+        <div class="ic">₹</div>
+        <h3>GST worked out for you</h3>
+        <p>Type an HSN or SAC code and the GST rate fills in. Same-state orders split into CGST + SGST; inter-state become IGST — automatically, on every document.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">⇄</div>
+        <h3>Invoice–PO matching</h3>
+        <p>Every vendor invoice is compared to its PO and flagged matched, partial, or unmatched — with the exact reason, so nothing gets approved by mistake.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">✓</div>
+        <h3>Approvals that fit your team</h3>
+        <p>Set one or several approval levels. Route POs and invoices to the right people, with a complete, timestamped audit trail.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">◷</div>
+        <h3>Vendor self-service portal</h3>
+        <p>Vendors onboard themselves with a company code, complete their profile, and upload KYC documents — cheque, GST and incorporation certificates.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">▤</div>
+        <h3>Professional PO documents</h3>
+        <p>Your letterhead, GSTIN, terms and conditions, amount in words, and a full annexure — download as PDF or email straight to the vendor.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">◈</div>
+        <h3>Your data, isolated</h3>
+        <p>Every company's data is separated at the database level — one company can never see another's vendors, orders, or invoices. Not just the screen — the data.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-  if(state.activeTab === 'profile'){
-    body += renderVendorProfileForm();
-    document.getElementById('root').innerHTML = shell(state.company.name, `${state.profile.name} · Vendor`, body);
-    loadVendorDocLinks();
-    return;
-  }
+<section class="band">
+  <div class="wrap">
+    <div>
+      <h2>Built by chartered accountants who <em>do this every day.</em></h2>
+      <p>Kiyra comes from Garg Shekhar &amp; Company — a practising CA firm. We didn't guess at how GST, HSN codes, and invoice compliance work. We deal with them for clients daily.</p>
+      <p>That's why the tax is right, the documents hold up, and the audit trail is real.</p>
+    </div>
+    <div>
+      <ul>
+        <li>GST logic that reflects real compliance, not a generic template</li>
+        <li>Documents structured the way tax and audit expect</li>
+        <li>Invoice matching designed around input-tax-credit reality</li>
+        <li>A firm you can actually talk to — not an overseas support queue</li>
+      </ul>
+    </div>
+  </div>
+</section>
 
-  if(state.activeTab === 'pos'){
-    const { data: pos } = await sb.from('purchase_orders').select('*').eq('vendor_id',vid).in('status',['sent','acknowledged','closed']).order('created_at',{ascending:false});
-    body += `<div class="card"><h3 style="margin-top:0;">Purchase Orders sent to you</h3>
-      <table><tr><th>PO #</th><th>Amount</th><th>Status</th><th>Expected delivery</th><th></th></tr>
-      ${(pos||[]).map(p=>`<tr>
-        <td>${p.po_number}</td><td>${fmtMoney(p.total_amount)}</td><td>${badge(p.status)}</td><td class="muted">${fmtDate(p.expected_delivery_date)}</td>
-        <td><button class="btn btn-sm btn-primary" onclick='openUploadInvoiceModal(${JSON.stringify(p.id)},${JSON.stringify(p.po_number)})'>Upload invoice</button></td>
-      </tr>`).join('') || '<tr><td colspan="5" class="muted">No POs yet.</td></tr>'}
-      </table>
-    </div>`;
-  } else {
-    const { data: invs } = await sb.from('invoices').select('*, purchase_orders(po_number)').eq('vendor_id',vid).order('submitted_at',{ascending:false});
-    body += `<div class="card"><h3 style="margin-top:0;">My submitted invoices</h3>
-      <table><tr><th>Invoice #</th><th>PO</th><th>Amount</th><th>Status</th><th>Submitted</th></tr>
-      ${(invs||[]).map(i=>`<tr>
-        <td>${i.invoice_number}</td><td>${i.purchase_orders?.po_number||''}</td><td>${fmtMoney(i.total_amount)}</td>
-        <td>${badge(i.status)}${i.status==='rejected'&&i.rejection_reason?`<div class="muted">${i.rejection_reason}</div>`:''}</td>
-        <td class="muted">${fmtDate(i.submitted_at)}</td>
-      </tr>`).join('') || '<tr><td colspan="5" class="muted">No invoices submitted yet.</td></tr>'}
-      </table>
-    </div>`;
-  }
+<section class="cta-final">
+  <div class="wrap">
+    <h2>Put your purchase orders on rails.</h2>
+    <p>Start free for 14 days. Bring your vendors on, raise your first GST-ready PO today.</p>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+      <a href="https://app.kiyra.ai" class="btn btn-primary">Start free trial</a>
+      <a href="pricing.html" class="btn">Compare plans</a>
+    </div>
+  </div>
+</section>
 
-  document.getElementById('root').innerHTML = shell(state.company.name, `${state.profile.name} · Vendor`, body);
-}
+<footer>
+  <div class="wrap">
+    <div>
+      <div class="logo">Kiy<span>ra</span></div>
+      <div class="fnote">A procurement product by Garg Shekhar &amp; Company, Chartered Accountants · Meerut &amp; Noida</div>
+    </div>
+    <div class="flinks">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="terms.docx">Terms</a>
+      <a href="privacy.docx">Privacy</a>
+      <a href="https://wa.me/918882335548">Contact on WhatsApp</a>
+    </div>
+  </div>
+</footer>
 
-function openUploadInvoiceModal(poId, poNumber){
-  showModal(`
-    <span class="close-x" onclick="closeModal()">✕</span>
-    <h3>Upload invoice for ${poNumber}</h3>
-    <label>Invoice number</label><input id="ui-number"/>
-    <label style="margin-top:8px;display:block;">Invoice date</label><input id="ui-date" type="date"/>
-    <label style="margin-top:8px;display:block;">Amount (excl. tax)</label><input id="ui-amount" type="number"/>
-    <label style="margin-top:8px;display:block;">Tax amount</label><input id="ui-tax" type="number" value="0"/>
-    <label style="margin-top:8px;display:block;">Invoice file (PDF/image)</label><input id="ui-file" type="file" accept=".pdf,.jpg,.jpeg,.png"/>
-    <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="submitInvoice('${poId}')">Submit for approval</button>
-    <p class="muted" id="ui-msg"></p>
-  `);
-}
-async function submitInvoice(poId){
-  const msg = document.getElementById('ui-msg');
-  const invoice_number = document.getElementById('ui-number').value.trim();
-  const invoice_date = document.getElementById('ui-date').value;
-  const amount = parseFloat(document.getElementById('ui-amount').value)||0;
-  const tax_amount = parseFloat(document.getElementById('ui-tax').value)||0;
-  const file = document.getElementById('ui-file').files[0];
-  if(!invoice_number || !invoice_date || !amount || !file){ msg.textContent = 'All fields and a file are required.'; return; }
-
-  const path = `${state.profile.id}/${Date.now()}_${file.name}`;
-  const { error: upErr } = await sb.storage.from('invoices').upload(path, file);
-  if(upErr){ msg.textContent = 'File upload failed: '+upErr.message; return; }
-
-  const { data, error } = await sb.from('invoices').insert({
-    company_id: state.company.id, po_id: poId, vendor_id: state.profile.id,
-    invoice_number, invoice_date, file_path: path, amount, tax_amount,
-    total_amount: amount+tax_amount, status:'submitted', current_approval_level: 1
-  }).select().single();
-  if(error){ msg.textContent = error.message; return; }
-  await logActivity(state.company.id, 'uploaded_invoice', 'invoice', data.id, {invoice_number});
-  closeModal(); toast('Invoice submitted for approval'); renderVendorApp('invoices');
-}
-
-// ============================================================
-// MODAL HELPERS
-// ============================================================
-function showModal(innerHtml, wide){
-  const bg = document.createElement('div');
-  bg.className = 'modal-bg';
-  bg.id = 'active-modal-bg';
-  bg.innerHTML = `<div class="modal${wide?' wide':''}">${innerHtml}</div>`;
-  document.body.appendChild(bg);
-}
-function closeModal(){
-  const el = document.getElementById('active-modal-bg');
-  if(el) el.remove();
-}
-
-// ============================================================
-// GO
-// ============================================================
-if(typeof supabase === 'undefined'){
-  document.getElementById('root').innerHTML = `
-  <div class="login-wrap"><div class="card login-card" style="width:480px;">
-    <h2 style="margin-top:0;color:var(--red);">Failed to load Supabase library</h2>
-    <p>The script from cdn.jsdelivr.net didn't load. Check your internet connection, or that your network/firewall isn't blocking cdn.jsdelivr.net, then reload the page.</p>
-  </div></div>`;
-} else if(sb){
-  sb.auth.onAuthStateChange((event, session) => {
-    state.session = session;
-    if(event === 'PASSWORD_RECOVERY'){
-      // User arrived via the reset-password email link — show the set-new-password form.
-      showResetPasswordForm();
-    }
-  });
-  boot();
-} else {
-  boot(); // will render the CONFIG_ERROR message
-}
-</script>
 </body>
 </html>
