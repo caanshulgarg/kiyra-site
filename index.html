@@ -29,10 +29,15 @@
   .nav-links a:hover{color:var(--ink);}
   .nav-login{font-weight:600!important;color:var(--ink)!important;}
   .nav-login:hover{color:var(--primary)!important;}
-  .btn{display:inline-block;font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;transition:all .15s;border:1px solid var(--ink);color:var(--ink);background:transparent;}
+  .btn{display:inline-block;font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;transition:all .15s;border:1.5px solid var(--ink);color:var(--ink);background:transparent;text-decoration:none;}
   .btn:hover{background:var(--ink);color:#fff;}
-  .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff;}
-  .btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
+  /* outline button — for Login */
+  .btn-outline{border:1.5px solid var(--primary);color:var(--primary);background:#fff;}
+  .btn-outline:hover{background:var(--primary-soft);color:var(--primary-dark);}
+  /* solid green button — for Register / trial. Force white text for contrast. */
+  .btn-primary{background:var(--primary);border:1.5px solid var(--primary);color:#ffffff!important;}
+  .btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);color:#ffffff!important;}
+  .btn-primary:visited,.btn-primary:link{color:#ffffff!important;}
 
   /* hero */
   .hero{padding:80px 0 60px;}
@@ -112,7 +117,9 @@
     .steps{grid-template-columns:1fr 1fr;}
     .feat-grid{grid-template-columns:1fr;}
     .hero h1{font-size:40px;}
-    .nav-links a:not(.btn):not(.nav-login){display:none;}
+    .nav-links a:not(.btn){display:none;}
+    .nav-links{gap:10px;}
+    .btn{padding:8px 14px;font-size:13px;}
   }
   @media(max-width:520px){
     .steps{grid-template-columns:1fr;}
@@ -130,8 +137,8 @@
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
       <a href="pricing.html">Pricing</a>
-      <a href="https://app.kiyra.ai" class="nav-login">Login</a>
-      <a href="https://app.kiyra.ai" class="btn btn-primary">Start free trial</a>
+      <a href="https://app.kiyra.ai" class="btn btn-outline">Login</a>
+      <a href="https://app.kiyra.ai" class="btn btn-primary">Register</a>
     </div>
   </div>
 </nav>
@@ -286,6 +293,7 @@
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
       <a href="pricing.html">Pricing</a>
+      <a href="https://wa.me/918882335548">Contact on WhatsApp</a>
     </div>
   </div>
 </footer>
