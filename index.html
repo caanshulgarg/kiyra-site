@@ -35,9 +35,12 @@
   .btn-outline{border:1.5px solid var(--primary);color:var(--primary);background:#fff;}
   .btn-outline:hover{background:var(--primary-soft);color:var(--primary-dark);}
   /* solid green button — for Register / trial. Force white text for contrast. */
-  .btn-primary{background:var(--primary);border:1.5px solid var(--primary);color:#ffffff!important;}
-  .btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);color:#ffffff!important;}
-  .btn-primary:visited,.btn-primary:link{color:#ffffff!important;}
+  a.btn-primary,
+  a.btn-primary:link,
+  a.btn-primary:visited,
+  a.btn-primary:hover,
+  a.btn-primary:active{background:var(--primary);border:1.5px solid var(--primary);color:#ffffff !important;}
+  a.btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);}
 
   /* hero */
   .hero{padding:80px 0 60px;}
